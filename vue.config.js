@@ -6,7 +6,7 @@ module.exports = {
         appId: "com.todowidget.app",
         productName: "TodoWidget",
         win: {
-          target: ["nsis"],
+          target: ["nsis", "zip"],
           icon: "build/icon.ico",
         },
       },
