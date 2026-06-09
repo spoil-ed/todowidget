@@ -3,106 +3,163 @@ Date: 2026-06-09
 
 ## Overview
 
-A minimal Windows desktop TODO app built with Vue 3 + Electron, inspired by weektodo's style. Core value: a calendar where every date cell shows a live preview of its todos, enabling at-a-glance overview across day/week/month views.
+A minimal Windows desktop TODO app built with Vue 3 + Electron, modeled after weektodo's architecture. Core value: a calendar where every date cell shows a live preview of its todos, enabling at-a-glance overview across day/week/month views.
 
 ## Tech Stack
 
-- **Frontend:** Vue 3 + Vuex
-- **Desktop shell:** Electron (reuse weektodo's `background.js` setup)
+- **Frontend:** Vue 3 + Vuex (same as weektodo)
+- **Desktop shell:** Electron (reuse weektodo's `background.js` pattern)
 - **Build:** Vue CLI + electron-builder (same as weektodo)
-- **Storage:** Local JSON file via `electron-config` (`userData/todos.json`)
-- **Styling:** Bootstrap + Bootstrap Icons (already in weektodo)
+- **Storage:** `electron-store` (replaces weektodo's localStorage + IndexedDB; stores data as JSON files in `userData/`)
+- **Styling:** Bootstrap + Bootstrap Icons + SCSS (same as weektodo)
+- **Date handling:** moment.js (same as weektodo)
 
 ## Architecture
+
+Follows weektodo's layered pattern: Vue components → Vuex store → repositories → storage.
 
 ```
 todowidget/
 ├── src/
-│   ├── App.vue                 # Root layout: CalendarPanel + detail pane
-│   ├── main.js                 # Vue entry
-│   ├── background.js           # Electron main process
+│   ├── App.vue                        # Root layout: sidebar + main panel
+│   ├── main.js                        # Vue + Vuex entry
+│   ├── background.js                  # Electron main process (IPC handlers)
 │   ├── components/
-│   │   ├── CalendarPanel.vue   # Calendar with inline todo previews; view switcher
-│   │   ├── TodoList.vue        # Full todo list for selected date
-│   │   ├── TodoItem.vue        # Single todo row: checkbox, text, delete
-│   │   └── AddTodo.vue         # Input bar: press Enter to add
+│   │   ├── layout/
+│   │   │   └── sideBar.vue            # Left panel: calendar + view switcher
+│   │   ├── toDoList.vue               # Right panel: todo list for selected date/week/month
+│   │   ├── toDoItem.vue               # Single todo row: checkbox, text, delete
+│   │   └── listHeader.vue             # Header: date label + add button
+│   ├── views/
+│   │   └── toDoModal/
+│   │       └── toDoModal.vue          # Add/edit todo modal (text input + date picker)
+│   ├── repositories/
+│   │   ├── storageRepository.js       # Wraps electron-store: get/set/remove (config)
+│   │   └── todoRepository.js          # Wraps electron-store: CRUD for todos keyed by date
 │   ├── store/
-│   │   ├── store.js
+│   │   ├── store.js                   # Vuex root
 │   │   └── modules/
-│   │       ├── todos.store.js  # CRUD + date-indexed lookup
-│   │       └── config.store.js # Active view (day/week/month) + selected date
-│   └── helpers/
-│       └── date.js             # Week range, month grid, formatting helpers
+│   │       ├── todolist.store.js      # Todo state: todoLists{date→[]} + selectedDate
+│   │       └── config.store.js        # Config state: activeView (day/week/month), etc.
+│   ├── helpers/
+│   │   └── dateHelper.js              # Week range, month grid, YYYY-MM-DD formatting
+│   └── assets/
+│       └── style/
+│           ├── globalVars.scss        # Colors, spacing variables
+│           └── main.scss              # Global styles
+├── vue.config.js
 └── package.json
 ```
 
-**Data flow:** User action → Vuex action → write `todos.json` → component reactivity
+**Data flow:**
+```
+User action
+  → Vue component emits
+    → Vuex mutation (updates state)
+      → Vuex action calls repository
+        → repository writes to electron-store (JSON file in userData/)
+```
 
-**Removed from weektodo:** repeating events, sentry, i18n, payment modal, splash screen, cryptocurrency icons, link list.
+On app start: `background.js` → IPC loads `todos.json` + `config.json` → Vuex hydrated.
 
-## Data Model
+## Storage Layer
 
-```json
-{
-  "todos": [
-    {
-      "id": "uuid-v4",
-      "text": "回复邮件",
-      "done": false,
-      "date": "2026-06-10",
-      "createdAt": 1749456000000
-    }
-  ]
+weektodo uses `storageRepository` (localStorage) for config and `dbRepository` (IndexedDB) for todos. We replace both with `electron-store`, keeping the same repository interface:
+
+```js
+// storageRepository.js — config (reads/writes config.json)
+export default {
+  get(key) { return store.get(key) },
+  set(key, val) { store.set(key, val) },
+}
+
+// todoRepository.js — todos keyed by date (reads/writes todos.json)
+export default {
+  get(date) { return store.get(date) ?? [] },         // returns [] for "2026-06-10"
+  set(date, todos) { store.set(date, todos) },
+  remove(date) { store.delete(date) },
+  getAll() { return store.store },                    // full {date→todos[]} map
 }
 ```
 
-- `date` is `YYYY-MM-DD` string — the key for all calendar lookups.
-- No sub-tasks, no priorities, no tags in v1.
+Vuex actions call these repositories — components never touch storage directly.
+
+## Data Model
+
+```js
+// Single todo object (stored inside date-keyed arrays)
+{
+  id: "uuid-v4",
+  text: "回复邮件",
+  checked: false,
+  createdAt: 1749456000000
+}
+
+// todos.json on disk (electron-store)
+{
+  "2026-06-09": [ { id, text, checked, createdAt }, ... ],
+  "2026-06-10": [ ... ],
+}
+
+// config.json on disk
+{
+  activeView: "month",          // "day" | "week" | "month"
+  selectedDate: "2026-06-09",   // currently focused date
+  weekStartOnMonday: true
+}
+```
 
 ## Views
 
 ### Month View (default)
 - 6-row × 7-col calendar grid
-- Each cell: date number + up to 2 todo text previews (truncated) + overflow count if more
-- Clicking a cell sets selected date → detail pane slides in at bottom (or right panel on wide screens)
-- Today highlighted; dates with todos get a subtle dot indicator
+- Each cell: date number + up to 2 todo text previews (ellipsis if long) + "+N" overflow badge
+- Today highlighted with accent color; dates with todos get a dot indicator
+- Click any cell → sets `selectedDate` → detail panel updates below (or right side)
 
 ### Week View
-- 7 columns for Mon–Sun of the selected week
-- Each column: full date label + scrollable todo list + `+` add button inline
-- Taller cells, more preview lines visible
+- 7 columns (Mon–Sun of selected week)
+- Each column: date label + scrollable todo list + inline `+` add button at bottom
+- Taller cells than month view; shows more preview lines
 
 ### Day View
-- Single-day full list
-- All todos for selected date, full text, no truncation
+- Full todo list for `selectedDate`
+- All todos shown with full text, no truncation
 - Add input always visible at bottom
 
 ### View Switcher
-- Three buttons `[日][周][月]` in the top bar
-- Switches CalendarPanel rendering mode; selected date is preserved across switches
+- `[日][周][月]` buttons in top bar
+- Switches calendar rendering; `selectedDate` preserved across switches
 
 ## Core Interactions
 
 | Action | Trigger |
 |--------|---------|
-| Add todo | Type in AddTodo input → press Enter |
-| Complete todo | Click checkbox → strikethrough style |
-| Delete todo | Hover todo row → click `×` button |
+| Add todo | Click `+` or press Enter in add input → `toDoModal` or inline |
+| Complete todo | Click checkbox → `checked: true` → strikethrough style |
+| Delete todo | Hover row → click `×` |
 | Navigate calendar | `<` `>` arrows on calendar header |
 | Select date | Click any calendar cell |
-| Switch view | Click `[日]` `[周]` `[月]` buttons |
+| Switch view | Click `[日]` `[周]` `[月]` |
 
-## Persistence
+## Removed from weektodo
 
-- On every Vuex mutation that modifies todos, write full `todos` array to `userData/todos.json` via Electron IPC.
-- On app start, load `todos.json` into Vuex store.
-- No sync, no cloud, no backup in v1.
+- Repeating events (store modules, repositories, modal)
+- Multi-language / i18n
+- Notifications
+- Payment / donate modals
+- Splash screen
+- Active todo tracking
+- Export/import tool
+- Migrations system
+- Sentry error tracking
+- Custom todo lists (just date-keyed lists)
 
-## What's Out of Scope (v1)
+## Out of Scope (v1)
 
-- Recurring tasks
-- Priority levels / tags
 - Dark/light theme toggle
-- Search
-- Notifications / reminders
-- Mobile / web version
+- Search / filter
+- Priority levels / tags
+- Reminders / system notifications
+- Sub-tasks
+- Cloud sync
