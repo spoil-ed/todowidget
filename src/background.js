@@ -30,6 +30,7 @@ async function createWindow() {
   })
 
   mainWindow.removeMenu()
+  mainWindow.on('closed', () => { mainWindow = null })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
@@ -69,7 +70,7 @@ if (!gotTheLock) {
     if (isDevelopment && !process.env.IS_TEST) {
       try { await installExtension(VUEJS_DEVTOOLS) } catch (e) { /* ignore */ }
     }
-    createWindow()
+    await createWindow()
   })
 
   if (isDevelopment) {
