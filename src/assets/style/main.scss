@@ -78,6 +78,7 @@ body {
   border-left: 1px solid var(--border);
   border-top: 1px solid var(--border);
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -183,7 +184,7 @@ body {
       padding: 4px;
       background: transparent;
       color: var(--text-muted);
-      &::placeholder { color: #bbb; }
+      &::placeholder { color: var(--placeholder); }
     }
   }
 }
@@ -246,6 +247,7 @@ body {
   padding: 6px 4px;
   border-radius: 4px;
   position: relative;
+  transition: background 0.1s;
 
   &:hover { background: var(--bg-hover); }
   &:hover .todo-delete { opacity: 1; }
@@ -272,7 +274,7 @@ body {
     transition: opacity 0.15s;
     flex-shrink: 0;
 
-    &:hover { color: #e53e3e; }
+    &:hover { color: var(--danger); }
   }
 }
 
@@ -320,7 +322,7 @@ body {
 }
 
 .modal-box {
-  background: white;
+  background: var(--bg);
   border-radius: 10px;
   padding: 24px;
   width: 380px;
