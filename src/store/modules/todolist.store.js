@@ -21,21 +21,21 @@ const mutations = {
 }
 
 const actions = {
-  addTodo({ commit, state }, { date, text }) {
-    const todos = [...(state.todoLists[date] || [])]
+  addTodo({ commit, getters }, { date, text }) {
+    const todos = [...getters.todosForDate(date)]
     todos.push({ id: uniqueId('todo_'), text, checked: false, createdAt: Date.now() })
     commit('setDateTodos', { date, todos })
     todoRepository.set(date, todos)
   },
-  toggleTodo({ commit, state }, { date, id }) {
-    const todos = (state.todoLists[date] || []).map(t =>
+  toggleTodo({ commit, getters }, { date, id }) {
+    const todos = getters.todosForDate(date).map(t =>
       t.id === id ? { ...t, checked: !t.checked } : t
     )
     commit('setDateTodos', { date, todos })
     todoRepository.set(date, todos)
   },
-  deleteTodo({ commit, state }, { date, id }) {
-    const todos = (state.todoLists[date] || []).filter(t => t.id !== id)
+  deleteTodo({ commit, getters }, { date, id }) {
+    const todos = getters.todosForDate(date).filter(t => t.id !== id)
     commit('setDateTodos', { date, todos })
     todoRepository.set(date, todos)
   },

@@ -357,3 +357,83 @@ body {
     }
   }
 }
+
+// Add button in topbar
+.add-btn {
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--border);
+  background: none;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  &:hover { background: var(--primary); color: white; border-color: var(--primary); }
+}
+
+// Sidebar mini calendar
+.sidebar {
+  width: 210px;
+  border-right: 1px solid var(--border);
+  padding: 12px 10px;
+  flex-shrink: 0;
+  overflow-y: auto;
+
+  .sidebar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+
+    button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      &:hover { background: var(--bg-hover); }
+    }
+  }
+
+  .sidebar-month-label { font-size: 12px; font-weight: 600; }
+}
+
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.mini-weekday {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 3px 0;
+}
+
+.mini-cell {
+  text-align: center;
+  font-size: 11px;
+  padding: 4px 2px;
+  border-radius: 3px;
+  cursor: pointer;
+  line-height: 1;
+
+  &:hover { background: var(--bg-hover); }
+  &.today { background: var(--today-bg); font-weight: 600; }
+  &.selected { background: var(--primary); color: white; border-radius: 50%; }
+  &.other-month { color: var(--text-muted); }
+}
+
+// Main content area (next to sidebar)
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}

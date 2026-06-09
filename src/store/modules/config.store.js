@@ -9,6 +9,7 @@ const state = {
 const getters = {
   activeView: s => s.activeView,
   selectedDate: s => s.selectedDate,
+  weekStartOnMonday: s => s.weekStartOnMonday,
 }
 
 const mutations = {

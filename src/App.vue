@@ -16,27 +16,27 @@
       <span class="current-label">{{ currentLabel }}</span>
 
       <div class="view-switcher">
-        <button
-          :class="{ active: activeView === 'day' }"
-          @click="setView('day')"
-        >日</button>
-        <button
-          :class="{ active: activeView === 'week' }"
-          @click="setView('week')"
-        >周</button>
-        <button
-          :class="{ active: activeView === 'month' }"
-          @click="setView('month')"
-        >月</button>
+        <button :class="{ active: activeView === 'day' }" @click="setView('day')">日</button>
+        <button :class="{ active: activeView === 'week' }" @click="setView('week')">周</button>
+        <button :class="{ active: activeView === 'month' }" @click="setView('month')">月</button>
       </div>
+
+      <button class="add-btn" @click="showModal = true" title="添加待办">
+        <i class="bi bi-plus-lg"></i>
+      </button>
     </div>
 
     <!-- Main body -->
     <div class="app-body">
-      <day-view v-if="activeView === 'day'" />
-      <week-view v-else-if="activeView === 'week'" />
-      <month-view v-else />
+      <side-bar />
+      <div class="main-content">
+        <day-view v-if="activeView === 'day'" />
+        <week-view v-else-if="activeView === 'week'" />
+        <month-view v-else />
+      </div>
     </div>
+
+    <todo-modal v-if="showModal" @close="showModal = false" />
   </div>
 </template>
 
@@ -45,11 +45,14 @@ import moment from 'moment'
 import DayView from './components/DayView.vue'
 import WeekView from './components/WeekView.vue'
 import MonthView from './components/MonthView.vue'
+import SideBar from './components/layout/SideBar.vue'
+import TodoModal from './views/TodoModal.vue'
 import { weekRange } from './helpers/dateHelper'
 
 export default {
   name: 'App',
-  components: { DayView, WeekView, MonthView },
+  components: { DayView, WeekView, MonthView, SideBar, TodoModal },
+  data() { return { showModal: false } },
   computed: {
     activeView() { return this.$store.getters.activeView },
     selectedDate() { return this.$store.getters.selectedDate },

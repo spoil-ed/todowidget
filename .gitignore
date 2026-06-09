@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist_electron/
+.env.local
+.env.*.local
+npm-debug.log*
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
