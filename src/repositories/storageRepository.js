@@ -1,6 +1,8 @@
 // Config storage — IPC calls to main process (electron-store writes config.json)
+let _ipc = null
 function getIpc() {
-  return require('electron').ipcRenderer
+  if (!_ipc) _ipc = window.require('electron').ipcRenderer
+  return _ipc
 }
 
 export default {
