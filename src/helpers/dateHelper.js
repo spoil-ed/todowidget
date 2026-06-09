@@ -1,5 +1,6 @@
 const moment = require('moment')
 require('moment/locale/zh-cn')
+// NOTE: sets global moment locale to zh-cn — intentional for this single-locale app.
 moment.locale('zh-cn')
 
 // Always interpret "today" as the local system clock (Beijing UTC+8 on target machine).
@@ -31,9 +32,9 @@ function weekRange(dateStr) {
 
 // Returns a 6×7 grid of cell objects for the month containing dateStr.
 // Grid always starts on Monday.
-function monthGrid(dateStr) {
+function monthGrid(dateStr, todayOverride) {
   const m = moment(dateStr, 'YYYY-MM-DD')
-  const todayStr = today()
+  const todayStr = todayOverride || today()
   const year = m.year()
   const month = m.month() // 0-based
 
