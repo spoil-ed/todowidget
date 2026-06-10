@@ -18,7 +18,7 @@
     "bootstrap": "^5.3.0",
     "bootstrap-icons": "^1.10.5",
     "core-js": "^3.20.1",
-    "electron-store": "^8.1.0",
+    "electron-store": "^7.0.3",
     "lodash.uniqueid": "^4.0.1",
     "moment": "^2.29.1",
     "vue": "^3.2.26",
