@@ -21,9 +21,11 @@ const mutations = {
 }
 
 const actions = {
-  addTodo({ commit, getters }, { date, text }) {
+  addTodo({ commit, getters }, { date, text, ddl }) {
     const todos = [...getters.todosForDate(date)]
-    todos.push({ id: uniqueId('todo_'), text, checked: false, createdAt: Date.now() })
+    const item = { id: uniqueId('todo_'), text, checked: false, createdAt: Date.now() }
+    if (ddl) item.ddl = ddl
+    todos.push(item)
     commit('setDateTodos', { date, todos })
     todoRepository.set(date, todos)
   },

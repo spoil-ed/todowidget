@@ -8,6 +8,7 @@
       </div>
       <!-- Right: todo list -->
       <div class="day-todos-col">
+        <quick-add :date="selectedDate" />
         <div class="day-todos">
           <todo-item
             v-for="todo in todos"
@@ -18,15 +19,6 @@
           />
           <div v-if="todos.length === 0" class="empty-hint">今天还没有待办事项</div>
         </div>
-        <div class="day-add-input">
-          <input
-            ref="addInput"
-            v-model="newText"
-            placeholder="添加待办事项，按 Enter 确认"
-            @keydown.enter="addTodo"
-          />
-          <button @click="addTodo">添加</button>
-        </div>
       </div>
     </div>
   </div>
@@ -36,11 +28,12 @@
 import moment from 'moment'
 import TodoItem from './TodoItem.vue'
 import TimelinePanel from './TimelinePanel.vue'
+import QuickAdd from './QuickAdd.vue'
 
 export default {
   name: 'DayView',
-  components: { TodoItem, TimelinePanel },
-  data() { return { newText: '' } },
+  components: { TodoItem, TimelinePanel, QuickAdd },
+  data() { return {} },
   computed: {
     selectedDate() { return this.$store.getters.selectedDate },
     todos() { return this.$store.getters.todosForDate(this.selectedDate) },
@@ -49,12 +42,6 @@ export default {
     },
   },
   methods: {
-    addTodo() {
-      const text = this.newText.trim()
-      if (!text) return
-      this.$store.dispatch('addTodo', { date: this.selectedDate, text })
-      this.newText = ''
-    },
     toggleTodo(id) { this.$store.dispatch('toggleTodo', { date: this.selectedDate, id }) },
     deleteTodo(id) { this.$store.dispatch('deleteTodo', { date: this.selectedDate, id }) },
   },
@@ -81,6 +68,4 @@ export default {
 }
 .day-todos { flex: 1; overflow-y: auto; }
 .empty-hint { color: var(--text-muted); font-size: 13px; padding: 8px 0; }
-.day-add-input { display: flex; gap: 8px; margin-top: 8px; flex-shrink: 0; }
-.day-add-input input { flex: 1; }
 </style>
