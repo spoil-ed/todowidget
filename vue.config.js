@@ -8,6 +8,7 @@ module.exports = {
         win: {
           target: ["nsis", "zip"],
           icon: "build/icon.ico",
+          signAndEditExecutable: false,
         },
       },
     },
