@@ -151,6 +151,12 @@ export default {
       eventError: '',
     }
   },
+  created() {
+    document.documentElement.style.background = 'transparent'
+    document.body.style.background = 'transparent'
+    const app = document.getElementById('app')
+    if (app) app.style.background = 'transparent'
+  },
   watch: {
     addingTodo(val) {
       if (val) this.$nextTick(() => this.$refs.todoInput?.focus())
