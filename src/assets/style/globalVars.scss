@@ -1,14 +1,44 @@
 :root {
+  /* Brand */
   --primary: #4a9eff;
+  --primary-dark: #2d7ad4;
   --primary-light: #e8f3ff;
-  --text: #24292e;
-  --text-muted: #6a737d;
-  --border: #e1e4e8;
+
+  /* Text */
+  --text: #1f2328;
+  --text-muted: #818c99;
+  --text-subtle: #b0b8c1;
+
+  /* Backgrounds */
   --bg: #ffffff;
-  --bg-hover: #f6f8fa;
-  --today-bg: #fff3cd;
-  --done-color: #6a737d;
-  --cell-min-height: 100px;
-  --placeholder: #bbb;
+  --bg-hover: #f5f7fa;
+  --bg-subtle: #f9fafb;
+
+  /* Borders */
+  --border: #e4e8ed;
+  --border-light: #f0f2f5;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
+
+  /* State */
+  --today-bg: #fff8e6;
+  --today-border: #f5c842;
+  --done-color: #b0b8c1;
   --danger: #e53e3e;
+  --accent: var(--primary);
+  --accent-light: var(--primary-light);
+
+  /* Calendar */
+  --cell-min-height: 100px;
+
+  /* Misc */
+  --placeholder: #c4cad2;
 }

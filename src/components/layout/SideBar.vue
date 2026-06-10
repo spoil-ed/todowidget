@@ -1,5 +1,23 @@
 <template>
   <div class="sidebar">
+    <div class="sidebar-page-tabs">
+      <button
+        class="sidebar-tab"
+        :class="{ active: currentPage === 'calendar' }"
+        @click="$store.commit('setPage', 'calendar')"
+      >
+        <i class="bi bi-calendar3"></i>
+        <span>日历</span>
+      </button>
+      <button
+        class="sidebar-tab"
+        :class="{ active: currentPage === 'backlog' }"
+        @click="$store.commit('setPage', 'backlog')"
+      >
+        <i class="bi bi-list-check"></i>
+        <span>待办清单</span>
+      </button>
+    </div>
     <div class="sidebar-nav">
       <button @click="prevMonth"><i class="bi bi-chevron-left"></i></button>
       <span class="sidebar-month-label">{{ monthLabel }}</span>
@@ -18,16 +36,6 @@
         }"
         @click="selectDate(cell.date)"
       >{{ cell.dayNum }}</div>
-    </div>
-    <div class="sidebar-bottom">
-      <button
-        class="sidebar-backlog-btn"
-        :class="{ active: currentPage === 'backlog' }"
-        @click="$store.commit('setPage', 'backlog')"
-      >
-        <i class="bi bi-list-check"></i>
-        <span>待办清单</span>
-      </button>
     </div>
   </div>
 </template>
@@ -68,27 +76,40 @@ export default {
     nextMonth() {
       this.cursorDate = moment(this.cursorDate, 'YYYY-MM-DD').add(1, 'month').format('YYYY-MM-DD')
     },
-    selectDate(date) { this.$store.commit('setSelectedDate', date) },
+    selectDate(date) {
+      this.$store.commit('setSelectedDate', date)
+      this.$store.commit('setPage', 'calendar')
+    },
   },
 }
 </script>
 
 <style scoped>
 .sidebar { display: flex; flex-direction: column; }
-.sidebar-bottom { margin-top: auto; padding: 8px; border-top: 1px solid var(--border); }
-.sidebar-backlog-btn {
-  width: 100%;
+.sidebar-page-tabs {
+  display: flex;
+  padding: 8px 8px 0;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.sidebar-tab {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 4px;
   border: none;
-  border-radius: 6px;
+  border-bottom: 2px solid transparent;
   background: none;
   cursor: pointer;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
+  border-radius: 4px 4px 0 0;
+  transition: color 0.15s;
 }
-.sidebar-backlog-btn.active { background: var(--accent-light, #e8f0fe); color: var(--accent, #4a90d9); }
-.sidebar-backlog-btn i { font-size: 16px; }
+.sidebar-tab:hover { color: var(--accent, #4a90d9); }
+.sidebar-tab.active { color: var(--accent, #4a90d9); border-bottom-color: var(--accent, #4a90d9); font-weight: 600; }
+.sidebar-tab i { font-size: 14px; }
 </style>
