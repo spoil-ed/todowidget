@@ -7,6 +7,8 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const Store = require('electron-store')
 const todoStore = new Store({ name: 'todos' })
 const configStore = new Store({ name: 'config' })
+const eventsStore = new Store({ name: 'events' })
+const backlogStore = new Store({ name: 'backlog' })
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const gotTheLock = app.requestSingleInstanceLock()
@@ -51,6 +53,16 @@ ipcMain.handle('todos:remove', (_, date) => { todoStore.delete(date) })
 ipcMain.handle('config:getAll', () => configStore.store)
 ipcMain.handle('config:get', (_, key, def) => configStore.get(key, def !== undefined ? def : null))
 ipcMain.handle('config:set', (_, key, val) => { configStore.set(key, val) })
+
+// IPC: events
+ipcMain.handle('events:getAll', () => eventsStore.store)
+ipcMain.handle('events:get', (_, date) => eventsStore.get(date, []))
+ipcMain.handle('events:set', (_, date, events) => { eventsStore.set(date, events) })
+ipcMain.handle('events:remove', (_, date) => { eventsStore.delete(date) })
+
+// IPC: backlog
+ipcMain.handle('backlog:getAll', () => backlogStore.get('items', []))
+ipcMain.handle('backlog:set', (_, items) => { backlogStore.set('items', items) })
 
 if (!gotTheLock) {
   app.quit()
