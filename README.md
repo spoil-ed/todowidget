@@ -2,23 +2,21 @@
 
 一个极简的 Windows 桌面 TODO 应用，支持日 / 周 / 月三种日历视图。
 
-A minimal Windows desktop TODO app with day / week / month calendar views.
+---
+
+## 功能
+
+- 日历视图切换：日、周、月
+- 月视图每格显示 todo 预览，超出显示 +N
+- 左侧迷你月历，独立游标，点击快速跳转日期
+- 顶栏 `+` 按钮可向任意日期添加 todo
+- 勾选完成、悬停删除
+- 数据本地持久化为 JSON 文件，无需网络
+- 日期计算对齐北京时间（UTC+8）
 
 ---
 
-## 功能 Features
-
-- 日历视图切换：日、周、月 / Switch between day, week, month views
-- 月视图每格显示 todo 预览，超出 +N 提示 / Month cells show inline todo previews with overflow badge
-- 左侧迷你月历快速跳转日期 / Sidebar mini-calendar for quick date navigation
-- 顶栏 + 按钮可跨日期添加 todo / Top bar + button to add todo to any date
-- 勾选完成、删除 / Check off and delete todos
-- 数据本地持久化（JSON 文件） / Data stored locally as JSON files
-- 北京时间对齐（UTC+8） / Beijing time (UTC+8) aligned
-
----
-
-## 技术栈 Stack
+## 技术栈
 
 - Vue 3 + Vuex 4
 - Electron 25
@@ -28,22 +26,22 @@ A minimal Windows desktop TODO app with day / week / month calendar views.
 
 ---
 
-## 开发 Development
+## 开发
 
 ```bash
 npm install
-npm run electron:serve   # 启动开发模式 / Start dev mode
-npm test                 # 运行单元测试 / Run unit tests
+npm run electron:serve   # 启动开发模式
+npm test                 # 运行单元测试
 ```
 
-> 如遇 ENOSPC inotify 错误，执行：
+> 如遇 `ENOSPC` inotify 错误：
 > `sudo sysctl fs.inotify.max_user_watches=524288`
 
 ---
 
-## 构建 Build
+## 构建
 
-在 **Windows** 上执行 / Run on **Windows**:
+在 **Windows** 上执行：
 
 ```bash
 npm run electron:build -- --win --x64
@@ -51,14 +49,11 @@ npm run electron:build -- --win --x64
 
 输出：`dist_electron/TodoWidget Setup 1.0.0.exe`（NSIS 安装包）
 
-Output: `dist_electron/TodoWidget Setup 1.0.0.exe` (NSIS installer)
-
-> Linux 跨平台构建需要 Wine。
-> Cross-compiling on Linux requires Wine.
+> Linux 跨平台构建需要安装 Wine。
 
 ---
 
-## 数据位置 Data Location
+## 数据位置
 
 ```
 %APPDATA%\todowidget\todos.json
