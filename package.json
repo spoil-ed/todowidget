@@ -6,11 +6,11 @@
   "author": "TodoWidget",
   "main": "background.js",
   "scripts": {
-    "serve": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service serve",
-    "build": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service build",
+    "serve": "cross-env NODE_OPTIONS=--openssl-legacy-provider vue-cli-service serve",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "electron:build": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service electron:build",
-    "electron:serve": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service electron:serve",
+    "electron:build": "cross-env NODE_OPTIONS=--openssl-legacy-provider vue-cli-service electron:build",
+    "electron:serve": "cross-env NODE_OPTIONS=--openssl-legacy-provider vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "test": "jest"
   },
@@ -32,6 +32,7 @@
     "@vue/compiler-sfc": "^3.2.26",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^29.0.0",
+    "cross-env": "^10.1.0",
     "electron": "^25.0.1",
     "electron-devtools-installer": "^3.1.0",
     "eslint": "^6.7.2",
@@ -52,6 +53,8 @@
     "transform": {
       "^.+\\.js$": "babel-jest"
     },
-    "testMatch": ["**/tests/**/*.test.js"]
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
   }
 }
