@@ -1,59 +1,59 @@
 # TodoWidget
 
-一个极简的 Windows 桌面 TODO 应用，支持日 / 周 / 月三种日历视图。
+A minimal Windows desktop TODO app with day / week / month calendar views.
 
 ---
 
-## 功能
+## Features
 
-- 日历视图切换：日、周、月
-- 月视图每格显示 todo 预览，超出显示 +N
-- 左侧迷你月历，独立游标，点击快速跳转日期
-- 顶栏 `+` 按钮可向任意日期添加 todo
-- 勾选完成、悬停删除
-- 数据本地持久化为 JSON 文件，无需网络
-- 日期计算对齐北京时间（UTC+8）
+- Switch between day, week, and month views
+- Month cells show inline todo previews with +N overflow badge
+- Sidebar mini-calendar with independent cursor for quick date navigation
+- Top bar `+` button to add a todo to any date
+- Check off and delete todos
+- Data persisted locally as JSON files — no network required
+- Date calculations aligned to Beijing time (UTC+8)
 
 ---
 
-## 技术栈
+## Stack
 
 - Vue 3 + Vuex 4
 - Electron 25
-- electron-store（本地 JSON 持久化）
-- moment.js（zh-cn 中文日期）
+- electron-store (local JSON persistence)
+- moment.js (zh-cn locale)
 - Bootstrap Icons
 
 ---
 
-## 开发
+## Development
 
 ```bash
 npm install
-npm run electron:serve   # 启动开发模式
-npm test                 # 运行单元测试
+npm run electron:serve   # start dev mode
+npm test                 # run unit tests
 ```
 
-> 如遇 `ENOSPC` inotify 错误：
+> If you hit an `ENOSPC` inotify error:
 > `sudo sysctl fs.inotify.max_user_watches=524288`
 
 ---
 
-## 构建
+## Build
 
-在 **Windows** 上执行：
+Run on **Windows**:
 
 ```bash
 npm run electron:build -- --win --x64
 ```
 
-输出：`dist_electron/TodoWidget Setup 1.0.0.exe`（NSIS 安装包）
+Output: `dist_electron/TodoWidget Setup 1.0.0.exe` (NSIS installer)
 
-> Linux 跨平台构建需要安装 Wine。
+> Cross-compiling on Linux requires Wine.
 
 ---
 
-## 数据位置
+## Data Location
 
 ```
 %APPDATA%\todowidget\todos.json

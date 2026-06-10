@@ -1,0 +1,23 @@
+node:internal/fs/watchers:255
+    throw error;
+    ^
+
+Error: ENOSPC: System limit for number of file watchers reached, watch '/mnt/data/spoil/workspace/homework/todowidget/.superpowers/brainstorm/3873896-1781013383/content'
+    at FSWatcher.<computed> (node:internal/fs/watchers:247:19)
+    at Object.watch (node:fs:2503:36)
+    at startServer (/home/user01/.agents/skills/brainstorming/scripts/server.cjs:276:22)
+    at Object.<anonymous> (/home/user01/.agents/skills/brainstorming/scripts/server.cjs:351:3)
+    at Module._compile (node:internal/modules/cjs/loader:1521:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+    at Module.load (node:internal/modules/cjs/loader:1266:32)
+    at Module._load (node:internal/modules/cjs/loader:1091:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+    at node:internal/main/run_main_module:28:49 {
+  errno: -28,
+  syscall: 'watch',
+  code: 'ENOSPC',
+  path: '/mnt/data/spoil/workspace/homework/todowidget/.superpowers/brainstorm/3873896-1781013383/content',
+  filename: '/mnt/data/spoil/workspace/homework/todowidget/.superpowers/brainstorm/3873896-1781013383/content'
+}
+
+Node.js v20.20.2
