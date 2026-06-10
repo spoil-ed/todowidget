@@ -33,6 +33,9 @@ async function init() {
     store.commit('setSelectedDate', moment().format('YYYY-MM-DD'))
   }
 
+  await store.dispatch('loadAllEvents')
+  await store.dispatch('loadBacklog')
+
   createApp(App).use(store).mount('#app')
 }
 
