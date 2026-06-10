@@ -1,30 +1,27 @@
 <template>
-  <div id="app">
+  <widget-view v-if="isWidgetMode" />
+  <div v-else id="app">
     <!-- Top bar -->
     <div class="app-topbar">
       <span class="app-title">TodoWidget</span>
 
-      <div class="nav-arrows">
-        <button @click="navigateBack" title="上一个">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        <button @click="navigateForward" title="下一个">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
+      <template v-if="currentPage === 'calendar'">
+        <div class="nav-arrows">
+          <button @click="navigateBack"><i class="bi bi-chevron-left"></i></button>
+          <button @click="navigateForward"><i class="bi bi-chevron-right"></i></button>
+        </div>
+        <span class="current-label">{{ currentLabel }}</span>
+        <div class="view-switcher">
+          <button :class="{ active: activeView === 'day' }" @click="setView('day')">日</button>
+          <button :class="{ active: activeView === 'week' }" @click="setView('week')">周</button>
+          <button :class="{ active: activeView === 'month' }" @click="setView('month')">月</button>
+        </div>
+      </template>
+      <span v-else class="current-label">待办清单</span>
 
-      <span class="current-label">{{ currentLabel }}</span>
-
-      <button v-if="currentPage === 'backlog'" class="back-btn" @click="$store.commit('setPage', 'calendar')" title="返回日历">
-        <i class="bi bi-calendar3"></i>
+      <button class="topbar-icon-btn" @click="enterWidget" title="桌面挂件">
+        <i class="bi bi-window-sidebar"></i>
       </button>
-
-      <div class="view-switcher">
-        <button :class="{ active: activeView === 'day' }" @click="setView('day')">日</button>
-        <button :class="{ active: activeView === 'week' }" @click="setView('week')">周</button>
-        <button :class="{ active: activeView === 'month' }" @click="setView('month')">月</button>
-      </div>
-
       <button class="add-btn" @click="showModal = true" title="添加待办">
         <i class="bi bi-plus-lg"></i>
       </button>
@@ -55,15 +52,23 @@ import MonthView from './components/MonthView.vue'
 import SideBar from './components/layout/SideBar.vue'
 import TodoModal from './views/TodoModal.vue'
 import BacklogView from './views/BacklogView.vue'
+import WidgetView from './views/WidgetView.vue'
 import { weekRange } from './helpers/dateHelper'
+
+let ipc = null
+function getIpc() {
+  if (!ipc) ipc = window.require('electron').ipcRenderer
+  return ipc
+}
 
 export default {
   name: 'App',
-  components: { DayView, WeekView, MonthView, SideBar, TodoModal, BacklogView },
+  components: { DayView, WeekView, MonthView, SideBar, TodoModal, BacklogView, WidgetView },
   data() { return { showModal: false } },
   computed: {
-    activeView() { return this.$store.getters.activeView },
-    currentPage() { return this.$store.getters.currentPage },
+    isWidgetMode() { return window.location.hash === '#widget' },
+    activeView()   { return this.$store.getters.activeView },
+    currentPage()  { return this.$store.getters.currentPage },
     selectedDate() { return this.$store.getters.selectedDate },
     currentLabel() {
       const m = moment(this.selectedDate, 'YYYY-MM-DD')
@@ -71,7 +76,7 @@ export default {
       if (this.activeView === 'week') {
         const dates = weekRange(this.selectedDate)
         const start = moment(dates[0], 'YYYY-MM-DD').format('M月D日')
-        const end = moment(dates[6], 'YYYY-MM-DD').format('M月D日')
+        const end   = moment(dates[6], 'YYYY-MM-DD').format('M月D日')
         return `${start} – ${end}`
       }
       return m.format('YYYY年M月')
@@ -89,6 +94,7 @@ export default {
       const unit = this.activeView === 'day' ? 'day' : this.activeView === 'week' ? 'week' : 'month'
       this.$store.commit('setSelectedDate', m.add(1, unit).format('YYYY-MM-DD'))
     },
+    enterWidget() { getIpc().invoke('widget:show') },
   },
 }
 </script>
