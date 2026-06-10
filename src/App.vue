@@ -15,6 +15,10 @@
 
       <span class="current-label">{{ currentLabel }}</span>
 
+      <button v-if="currentPage === 'backlog'" class="back-btn" @click="$store.commit('setPage', 'calendar')" title="返回日历">
+        <i class="bi bi-calendar3"></i>
+      </button>
+
       <div class="view-switcher">
         <button :class="{ active: activeView === 'day' }" @click="setView('day')">日</button>
         <button :class="{ active: activeView === 'week' }" @click="setView('week')">周</button>
@@ -30,9 +34,12 @@
     <div class="app-body">
       <side-bar />
       <div class="main-content">
-        <day-view v-if="activeView === 'day'" />
-        <week-view v-else-if="activeView === 'week'" />
-        <month-view v-else />
+        <template v-if="currentPage === 'calendar'">
+          <day-view v-if="activeView === 'day'" />
+          <week-view v-else-if="activeView === 'week'" />
+          <month-view v-else />
+        </template>
+        <backlog-view v-else-if="currentPage === 'backlog'" />
       </div>
     </div>
 
@@ -47,14 +54,16 @@ import WeekView from './components/WeekView.vue'
 import MonthView from './components/MonthView.vue'
 import SideBar from './components/layout/SideBar.vue'
 import TodoModal from './views/TodoModal.vue'
+import BacklogView from './views/BacklogView.vue'
 import { weekRange } from './helpers/dateHelper'
 
 export default {
   name: 'App',
-  components: { DayView, WeekView, MonthView, SideBar, TodoModal },
+  components: { DayView, WeekView, MonthView, SideBar, TodoModal, BacklogView },
   data() { return { showModal: false } },
   computed: {
     activeView() { return this.$store.getters.activeView },
+    currentPage() { return this.$store.getters.currentPage },
     selectedDate() { return this.$store.getters.selectedDate },
     currentLabel() {
       const m = moment(this.selectedDate, 'YYYY-MM-DD')

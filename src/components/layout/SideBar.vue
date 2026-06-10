@@ -19,6 +19,16 @@
         @click="selectDate(cell.date)"
       >{{ cell.dayNum }}</div>
     </div>
+    <div class="sidebar-bottom">
+      <button
+        class="sidebar-backlog-btn"
+        :class="{ active: currentPage === 'backlog' }"
+        @click="$store.commit('setPage', 'backlog')"
+      >
+        <i class="bi bi-list-check"></i>
+        <span>待办清单</span>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -41,6 +51,7 @@ export default {
   },
   computed: {
     selectedDate() { return this.$store.getters.selectedDate },
+    currentPage() { return this.$store.getters.currentPage },
     monthLabel() { return moment(this.cursorDate, 'YYYY-MM-DD').format('YYYY年M月') },
     weekdayNames() { return ['一', '二', '三', '四', '五', '六', '日'] },
     flatGrid() {
@@ -61,3 +72,23 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.sidebar { display: flex; flex-direction: column; }
+.sidebar-bottom { margin-top: auto; padding: 8px; border-top: 1px solid var(--border); }
+.sidebar-backlog-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.sidebar-backlog-btn.active { background: var(--accent-light, #e8f0fe); color: var(--accent, #4a90d9); }
+.sidebar-backlog-btn i { font-size: 16px; }
+</style>

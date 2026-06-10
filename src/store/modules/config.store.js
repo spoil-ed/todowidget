@@ -4,12 +4,14 @@ const state = {
   activeView: 'month',       // 'day' | 'week' | 'month'
   selectedDate: '',          // YYYY-MM-DD, set on app init
   weekStartOnMonday: true,
+  currentPage: 'calendar',
 }
 
 const getters = {
   activeView: s => s.activeView,
   selectedDate: s => s.selectedDate,
   weekStartOnMonday: s => s.weekStartOnMonday,
+  currentPage: s => s.currentPage,
 }
 
 const mutations = {
@@ -25,6 +27,7 @@ const mutations = {
     if (cfg.activeView) state.activeView = cfg.activeView
     if (cfg.selectedDate) state.selectedDate = cfg.selectedDate
   },
+  setPage(state, page) { state.currentPage = page },
 }
 
 export default { namespaced: false, state, getters, mutations }
