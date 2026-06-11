@@ -4,6 +4,7 @@ import { app, protocol, BrowserWindow, ipcMain, screen } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { widgetBottomRightBounds, widgetResizeBounds } from './helpers/windowBoundsHelper'
+import { broadcastTasksUpdated } from './helpers/taskUpdateBroadcastHelper'
 
 const Store = require('electron-store')
 const todoStore = new Store({ name: 'todos' })
@@ -150,9 +151,7 @@ ipcMain.handle('backlog:set', (_, items) => { backlogStore.set('items', items) }
 ipcMain.handle('tasks:getAll', () => tasksStore.get('items', []))
 ipcMain.handle('tasks:set', (_, items) => {
   tasksStore.set('items', items)
-  BrowserWindow.getAllWindows().forEach(win => {
-    if (!win.isDestroyed()) win.webContents.send('tasks:updated', items)
-  })
+  broadcastTasksUpdated(BrowserWindow.getAllWindows(), items)
 })
 
 // ── IPC: widget ──

@@ -54,6 +54,10 @@ function normalizeTaskFields(task) {
   return normalized
 }
 
+function snapshotTasks(tasks) {
+  return tasks.map(task => normalizeTaskFields({ ...task }))
+}
+
 const getters = {
   tasks: s => s.tasks,
   tasksForDate: s => date => s.tasks.filter(t => t.date === date),
@@ -99,24 +103,24 @@ const actions = {
   },
   async addTask({ commit, state }, task) {
     const newTask = normalizeTaskFields({ ...task, id: uniqueId('task_'), checked: false })
-    const tasks = [...state.tasks, newTask]
+    const tasks = snapshotTasks([...state.tasks, newTask])
     await tasksRepository.set(tasks)
     commit('setTasks', tasks)
   },
   async updateTask({ commit, state }, { id, changes }) {
-    const tasks = state.tasks.map(t => (
+    const tasks = snapshotTasks(state.tasks.map(t => (
       t.id === id ? normalizeTaskFields({ ...t, ...changes, id }) : t
-    ))
+    )))
     await tasksRepository.set(tasks)
     commit('setTasks', tasks)
   },
   async toggleTask({ commit, state }, { id }) {
-    const tasks = state.tasks.map(t => t.id === id ? { ...t, checked: !t.checked } : t)
+    const tasks = snapshotTasks(state.tasks.map(t => t.id === id ? { ...t, checked: !t.checked } : t))
     await tasksRepository.set(tasks)
     commit('setTasks', tasks)
   },
   async deleteTask({ commit, state }, { id }) {
-    const tasks = state.tasks.filter(t => t.id !== id)
+    const tasks = snapshotTasks(state.tasks.filter(t => t.id !== id))
     await tasksRepository.set(tasks)
     commit('setTasks', tasks)
   },
