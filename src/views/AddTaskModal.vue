@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-box">
-      <h3>添加任务</h3>
+      <h3>{{ modalTitle }}</h3>
 
       <input
         ref="textInput"
@@ -31,7 +31,7 @@
         <input type="time" v-model="endTime" />
       </div>
 
-      <div v-if="date && kind === 'ddl'" class="tm-extra">
+      <div v-if="date && kind === 'ddl'" class="tm-extra tm-ddl-extra">
         <label>截止时间</label>
         <input type="time" v-model="ddlTime" placeholder="不填则全天" />
       </div>
@@ -40,7 +40,7 @@
 
       <div class="modal-actions">
         <button @click="$emit('close')">取消</button>
-        <button class="primary" @click="confirm">添加</button>
+        <button class="primary" @click="confirm">{{ confirmLabel }}</button>
       </div>
     </div>
   </div>
@@ -52,19 +52,29 @@ export default {
   props: {
     initialDate: { type: String, default: '' },
     initialTime: { type: String, default: '' },
+    task: { type: Object, default: null },
   },
   emits: ['close'],
   data() {
-    const date = this.initialDate || this.$store.getters.selectedDate
+    const task = this.task
+    const date = task?.date || this.initialDate || this.$store.getters.selectedDate
+    const taskDdlTime = task?.kind === 'ddl' && task.ddl?.includes(' ')
+      ? task.ddl.split(' ')[1]
+      : ''
     return {
-      text: '',
+      text: task?.text || '',
       date,
-      kind: date ? 'day' : 'free',
-      startTime: this.initialTime || '09:00',
-      endTime: this.initialTime ? this.addHour(this.initialTime) : '10:00',
-      ddlTime: '',
+      kind: task?.kind || (date ? 'day' : 'free'),
+      startTime: task?.startTime || this.initialTime || '09:00',
+      endTime: task?.endTime || (this.initialTime ? this.addHour(this.initialTime) : '10:00'),
+      ddlTime: taskDdlTime,
       error: '',
     }
+  },
+  computed: {
+    isEditing() { return !!this.task },
+    modalTitle() { return this.isEditing ? '修改任务' : '添加任务' },
+    confirmLabel() { return this.isEditing ? '保存' : '添加' },
   },
   watch: {
     date(val) {
@@ -81,19 +91,25 @@ export default {
     confirm() {
       const text = this.text.trim()
       if (!text) { this.error = '请填写内容'; return }
+      let payload
       if (this.date && this.kind === 'event') {
         if (this.startTime >= this.endTime) { this.error = '结束时间需晚于开始'; return }
-        this.$store.dispatch('addTask', {
+        payload = {
           text, kind: 'event', date: this.date,
           startTime: this.startTime, endTime: this.endTime,
-        })
+        }
       } else if (this.date && this.kind === 'ddl') {
         const ddl = this.ddlTime ? `${this.date} ${this.ddlTime}` : this.date
-        this.$store.dispatch('addTask', { text, kind: 'ddl', date: this.date, ddl })
+        payload = { text, kind: 'ddl', date: this.date, ddl }
       } else if (this.date) {
-        this.$store.dispatch('addTask', { text, kind: 'day', date: this.date })
+        payload = { text, kind: 'day', date: this.date }
       } else {
-        this.$store.dispatch('addTask', { text, kind: 'free', subtasks: [] })
+        payload = { text, kind: 'free', subtasks: [] }
+      }
+      if (this.isEditing) {
+        this.$store.dispatch('updateTask', { id: this.task.id, changes: payload })
+      } else {
+        this.$store.dispatch('addTask', payload)
       }
       this.$emit('close')
     },
@@ -126,8 +142,16 @@ export default {
   align-items: center;
   gap: 6px;
   margin-bottom: 10px;
-  label { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
-  input { flex: 1; }
+  label {
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  input { flex: 1; margin-bottom: 0; min-width: 0; }
+}
+.tm-ddl-extra input[type="time"] {
+  flex: 0 0 118px;
 }
 .tm-dash { color: var(--text-muted); font-size: 12px; }
 .modal-error { color: var(--danger); font-size: 12px; margin: 0 0 8px; }

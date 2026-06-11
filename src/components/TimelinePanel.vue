@@ -34,6 +34,7 @@
           :event="event"
           :top-px="eventTop(event)"
           :height-px="eventHeight(event)"
+          @edit="editEvent"
           @delete="deleteEvent(event.id)"
         />
         <!-- DDL markers -->
@@ -54,7 +55,8 @@
       v-if="showModal"
       :initial-date="date"
       :initial-time="modalInitialTime"
-      @close="showModal = false"
+      :task="editingEvent"
+      @close="closeModal"
     />
   </div>
 </template>
@@ -75,6 +77,7 @@ export default {
     return {
       showModal: false,
       modalInitialTime: '09:00',
+      editingEvent: null,
       now: new Date(),
       clockTimer: null,
     }
@@ -134,7 +137,7 @@ export default {
     ddlMarkerTop(t) { return timeToMinutes(t.ddlTime) - this.range.start },
     eventTop(event) { return timeToMinutes(event.startTime) - this.range.start },
     eventHeight(event) {
-      return Math.max(28, timeToMinutes(event.endTime) - timeToMinutes(event.startTime))
+      return Math.max(16, timeToMinutes(event.endTime) - timeToMinutes(event.startTime))
     },
     handleTimelineClick(e) {
       if (e.target.closest('.timeline-event')) return
@@ -143,6 +146,7 @@ export default {
       const y = e.clientY - canvas.getBoundingClientRect().top
       const snapped = Math.round((this.range.start + y) / 15) * 15
       this.modalInitialTime = minutesToTime(Math.min(Math.max(snapped, 0), 1425))
+      this.editingEvent = null
       this.showModal = true
     },
     scrollToInitialTime() {
@@ -151,8 +155,21 @@ export default {
       const target = this.date === today() ? this.currentTimeTop : timeToMinutes('08:00')
       scrollArea.scrollTop = Math.max(0, target - scrollArea.clientHeight * 0.35)
     },
+    editEvent(event) {
+      this.editingEvent = event
+      this.modalInitialTime = event.startTime || '09:00'
+      this.showModal = true
+    },
     deleteEvent(id) { this.$store.dispatch('deleteTask', { id }) },
-    openModal(time) { this.modalInitialTime = time; this.showModal = true },
+    closeModal() {
+      this.showModal = false
+      this.editingEvent = null
+    },
+    openModal(time) {
+      this.editingEvent = null
+      this.modalInitialTime = time
+      this.showModal = true
+    },
   },
 }
 </script>

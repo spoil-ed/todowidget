@@ -41,6 +41,18 @@ function migrateTasks(oldTodos, oldEvents, oldBacklog) {
 
 const state = { tasks: [] }
 
+function normalizeTaskFields(task) {
+  const normalized = { ...task }
+  if (normalized.kind !== 'event') {
+    delete normalized.startTime
+    delete normalized.endTime
+  }
+  if (normalized.kind !== 'ddl') delete normalized.ddl
+  if (normalized.kind !== 'free') delete normalized.subtasks
+  if (normalized.kind === 'free') delete normalized.date
+  return normalized
+}
+
 const getters = {
   tasks: s => s.tasks,
   tasksForDate: s => date => s.tasks.filter(t => t.date === date),
@@ -79,8 +91,15 @@ const actions = {
     commit('setTasks', tasks)
   },
   addTask({ commit, state }, task) {
-    const newTask = { ...task, id: uniqueId('task_'), checked: false }
+    const newTask = normalizeTaskFields({ ...task, id: uniqueId('task_'), checked: false })
     const tasks = [...state.tasks, newTask]
+    commit('setTasks', tasks)
+    tasksRepository.set(tasks)
+  },
+  updateTask({ commit, state }, { id, changes }) {
+    const tasks = state.tasks.map(t => (
+      t.id === id ? normalizeTaskFields({ ...t, ...changes, id }) : t
+    ))
     commit('setTasks', tasks)
     tasksRepository.set(tasks)
   },

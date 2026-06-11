@@ -30,7 +30,7 @@
         <button class="qa-cancel" @click="cancel"><i class="bi bi-x-lg"></i></button>
         <button class="qa-submit" @click="submit"><i class="bi bi-check-lg"></i></button>
       </div>
-      <div v-if="showDdl && !showSchedule" class="qa-extra">
+      <div v-if="showDdl && !showSchedule" class="qa-extra qa-ddl-extra">
         <label>截止时间</label>
         <input type="time" v-model="ddlTime" placeholder="不填则全天截止" />
       </div>
@@ -207,8 +207,16 @@ export default {
   margin-top: 6px;
   padding-top: 6px;
   border-top: 1px solid var(--border-light);
-  label { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
-  input { flex: 1; font-size: 12px; padding: 4px 8px; }
+  label {
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  input { flex: 1; min-width: 0; font-size: 12px; padding: 4px 8px; margin-bottom: 0; }
+}
+.qa-ddl-extra input[type="time"] {
+  flex: 0 0 118px;
 }
 .qa-dash { color: var(--text-muted); font-size: 12px; }
 .qa-error { font-size: 11px; color: var(--danger); margin: 4px 0 0; }

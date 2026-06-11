@@ -1,16 +1,23 @@
 <template>
   <div
     class="timeline-event"
-    :class="{ compact: isCompact }"
+    :class="{ compact: isCompact, tiny: isTiny }"
     :style="{ top: topPx + 'px', height: heightPx + 'px' }"
+    :title="`${event.startTime}-${event.endTime} ${event.text}`"
+    @click.stop="$emit('edit', event)"
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
   >
     <span class="tl-event-title">{{ event.text }}</span>
     <span class="tl-event-time">{{ event.startTime }}–{{ event.endTime }}</span>
-    <button v-if="hovered" class="tl-event-delete" @click.stop="$emit('delete', event.id)">
-      <i class="bi bi-x"></i>
-    </button>
+    <div v-if="hovered" class="tl-event-actions">
+      <button class="tl-event-action" title="修改" @click.stop="$emit('edit', event)">
+        <i class="bi bi-pencil"></i>
+      </button>
+      <button class="tl-event-action" title="删除" @click.stop="$emit('delete', event.id)">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -22,10 +29,11 @@ export default {
     topPx: { type: Number, required: true },
     heightPx: { type: Number, required: true },
   },
-  emits: ['delete'],
+  emits: ['edit', 'delete'],
   data() { return { hovered: false } },
   computed: {
     isCompact() { return this.heightPx < 38 },
+    isTiny() { return this.heightPx < 24 },
   },
 }
 </script>
@@ -45,9 +53,15 @@ export default {
   justify-content: center;
   gap: 1px;
   overflow: hidden;
-  cursor: default;
-  min-height: 28px;
+  cursor: pointer;
+  min-height: 0;
   line-height: 1.15;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
+  transition: filter 0.12s, box-shadow 0.12s;
+}
+.timeline-event:hover {
+  filter: brightness(1.04);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35), 0 2px 8px rgba(0,0,0,0.16);
 }
 .timeline-event.compact {
   flex-direction: row;
@@ -59,16 +73,29 @@ export default {
 .tl-event-time { font-size: 11px; opacity: 0.85; white-space: nowrap; flex-shrink: 0; }
 .compact .tl-event-title { min-width: 0; }
 .compact .tl-event-time { font-size: 10px; }
-.tl-event-delete {
+.tiny {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+.tiny .tl-event-time { display: none; }
+.tl-event-actions {
   position: absolute;
-  top: 2px;
+  top: 1px;
   right: 4px;
+  display: flex;
+  gap: 2px;
+}
+.tl-event-action {
   background: none;
   border: none;
   color: #fff;
   cursor: pointer;
-  padding: 0;
+  padding: 1px 2px;
   line-height: 1;
-  font-size: 14px;
+  font-size: 12px;
+  border-radius: 3px;
+}
+.tl-event-action:hover {
+  background: rgba(255,255,255,0.18);
 }
 </style>

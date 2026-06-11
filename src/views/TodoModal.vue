@@ -20,7 +20,7 @@
         </button>
       </div>
 
-      <div v-if="showDdl" class="tm-extra">
+      <div v-if="showDdl" class="tm-extra tm-ddl-extra">
         <label>截止时间</label>
         <input type="time" v-model="ddlTime" placeholder="不填则全天截止" />
       </div>
@@ -115,8 +115,16 @@ export default {
   align-items: center;
   gap: 6px;
   margin-bottom: 10px;
-  label { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
-  input { flex: 1; }
+  label {
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  input { flex: 1; margin-bottom: 0; min-width: 0; }
+}
+.tm-ddl-extra input[type="time"] {
+  flex: 0 0 118px;
 }
 .tm-dash { color: var(--text-muted); font-size: 12px; }
 .modal-error { color: var(--danger); font-size: 12px; margin: 0 0 8px; }

@@ -56,6 +56,7 @@
 <script>
 import moment from 'moment'
 import { monthGrid, today } from '../../helpers/dateHelper'
+import { calendarItemsForDate } from '../../helpers/calendarItemsHelper'
 
 export default {
   name: 'SideBar',
@@ -81,8 +82,8 @@ export default {
       }))
     },
     dateTasks() {
-      return this.$store.getters.tasksForDate(this.selectedDate)
-        .filter(t => t.kind !== 'free')
+      return calendarItemsForDate(this.$store.getters.tasks, this.selectedDate)
+        .map(item => item.task)
         .slice(0, 5)
     },
     summaryLabel() {
