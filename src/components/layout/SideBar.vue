@@ -11,19 +11,11 @@
       </button>
       <button
         class="sidebar-tab"
-        :class="{ active: currentPage === 'backlog' }"
-        @click="$store.commit('setPage', 'backlog')"
+        :class="{ active: currentPage !== 'calendar' }"
+        @click="$store.commit('setPage', 'tasks')"
       >
         <i class="bi bi-list-check"></i>
-        <span>待办清单</span>
-      </button>
-      <button
-        class="sidebar-tab"
-        :class="{ active: currentPage === 'deadline' }"
-        @click="$store.commit('setPage', 'deadline')"
-      >
-        <i class="bi bi-alarm"></i>
-        <span>截止</span>
+        <span>待办</span>
       </button>
     </div>
     <div class="sidebar-nav">
@@ -45,6 +37,19 @@
         @click="selectDate(cell.date)"
       >{{ cell.dayNum }}</div>
     </div>
+    <div v-if="dateTasks.length" class="sidebar-day-summary">
+      <div class="sds-label">{{ summaryLabel }}</div>
+      <div
+        v-for="t in dateTasks"
+        :key="t.id"
+        class="sds-item"
+        @click="goToDay"
+      >
+        <span v-if="t.kind === 'event'" class="sds-time">{{ t.startTime }}</span>
+        <span v-else-if="t.kind === 'ddl'" class="sds-time">⏰</span>
+        <span class="sds-text">{{ t.text }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -59,7 +64,6 @@ export default {
   },
   watch: {
     selectedDate(val) {
-      // sync cursor month when selected date changes to a different month
       if (val && val.slice(0, 7) !== this.cursorDate.slice(0, 7)) {
         this.cursorDate = val
       }
@@ -76,6 +80,14 @@ export default {
         dayNum: moment(cell.date, 'YYYY-MM-DD').date(),
       }))
     },
+    dateTasks() {
+      return this.$store.getters.tasksForDate(this.selectedDate)
+        .filter(t => t.kind !== 'free')
+        .slice(0, 5)
+    },
+    summaryLabel() {
+      return moment(this.selectedDate, 'YYYY-MM-DD').format('M月D日')
+    },
   },
   methods: {
     prevMonth() {
@@ -88,6 +100,10 @@ export default {
       this.$store.commit('setSelectedDate', date)
       this.$store.commit('setPage', 'calendar')
     },
+    goToDay() {
+      this.$store.commit('setActiveView', 'day')
+      this.$store.commit('setPage', 'calendar')
+    },
   },
 }
 </script>
@@ -95,29 +111,31 @@ export default {
 <style scoped>
 .sidebar { display: flex; flex-direction: column; }
 .sidebar-page-tabs {
-  display: flex;
-  padding: 8px 8px 0;
-  gap: 4px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 4px;
+  display: flex; padding: 8px 8px 0; gap: 4px;
+  border-bottom: 1px solid var(--border); margin-bottom: 4px;
 }
 .sidebar-tab {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 6px 4px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: 12px;
-  border-radius: 4px 4px 0 0;
-  transition: color 0.15s;
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  gap: 5px; padding: 6px 4px; border: none;
+  border-bottom: 2px solid transparent; background: none;
+  cursor: pointer; color: var(--text-muted); font-size: 12px;
+  border-radius: 4px 4px 0 0; transition: color 0.15s;
 }
 .sidebar-tab:hover { color: var(--accent, #4a90d9); }
 .sidebar-tab.active { color: var(--accent, #4a90d9); border-bottom-color: var(--accent, #4a90d9); font-weight: 600; }
 .sidebar-tab i { font-size: 14px; }
+.sidebar-day-summary {
+  padding: 8px 10px; border-top: 1px solid var(--border); margin-top: 4px;
+}
+.sds-label {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+}
+.sds-item {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 4px; border-radius: var(--radius-sm); cursor: pointer;
+  &:hover { background: var(--bg-hover); }
+}
+.sds-time { font-size: 10px; color: var(--text-muted); width: 32px; flex-shrink: 0; }
+.sds-text { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
