@@ -2,18 +2,18 @@
   <div class="widget-root">
 
     <!-- ── Header ── -->
-    <div class="w-header" style="-webkit-app-region: drag">
-      <div class="w-nav" style="-webkit-app-region: no-drag">
+    <div class="w-header">
+      <div class="w-nav">
         <button class="w-btn" @click="navPrev"><i class="bi bi-chevron-left"></i></button>
         <span class="w-date-label">{{ headerLabel }}</span>
         <button class="w-btn" @click="navNext"><i class="bi bi-chevron-right"></i></button>
       </div>
-      <div class="w-tabs" style="-webkit-app-region: no-drag">
+      <div class="w-tabs">
         <button :class="['w-tab', { active: view === 'day' }]"   @click="switchView('day')">日</button>
         <button :class="['w-tab', { active: view === 'week' }]"  @click="switchView('week')">周</button>
         <button :class="['w-tab', { active: view === 'month' }]" @click="switchView('month')">月</button>
       </div>
-      <button class="w-btn" style="-webkit-app-region: no-drag" @click="exitWidget" title="完整模式">
+      <button class="w-btn" @click="exitWidget" title="完整模式">
         <i class="bi bi-arrows-angle-expand"></i>
       </button>
     </div>
@@ -349,6 +349,7 @@ html, body, #app {
   padding: 10px 12px 8px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
   flex-shrink: 0;
+  -webkit-app-region: drag;
 }
 .w-nav { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
 .w-date-label {
@@ -357,6 +358,7 @@ html, body, #app {
 }
 .w-tabs { display: flex; gap: 2px; flex-shrink: 0; }
 .w-tab {
+  -webkit-app-region: no-drag;
   border: none; background: none;
   color: rgba(255,255,255,0.4); font-size: 11px;
   padding: 3px 7px; border-radius: 5px; cursor: pointer;
@@ -364,6 +366,7 @@ html, body, #app {
   &:hover:not(.active) { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
 }
 .w-btn {
+  -webkit-app-region: no-drag;
   border: none; background: none;
   color: rgba(255,255,255,0.4); cursor: pointer;
   padding: 3px 5px; border-radius: 5px; font-size: 11px; line-height: 1;
@@ -472,6 +475,7 @@ html, body, #app {
   text-transform: uppercase;
 }
 .w-add-btn {
+  -webkit-app-region: no-drag;
   border: none; background: none;
   color: rgba(255,255,255,0.30); cursor: pointer;
   font-size: 13px; padding: 1px 4px; border-radius: 4px; line-height: 1;
@@ -497,6 +501,7 @@ input[type="time"].w-input::-webkit-calendar-picker-indicator { filter: invert(1
 .w-time-row { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.4); }
 .w-todo-add-row { display: flex; align-items: center; gap: 5px; }
 .w-confirm-btn {
+  -webkit-app-region: no-drag;
   border: none; background: rgba(74,158,255,0.7); color: white;
   border-radius: 5px; padding: 4px 7px; cursor: pointer; font-size: 11px;
   &:hover { background: #4a9eff; }
@@ -520,6 +525,7 @@ input[type="time"].w-input::-webkit-calendar-picker-indicator { filter: invert(1
 .w-todo-text { font-size: 12px; color: rgba(255,255,255,0.82); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .w-todo-ddl { font-size: 10px; color: rgba(255,255,255,0.30); flex-shrink: 0; }
 .w-del-btn {
+  -webkit-app-region: no-drag;
   border: none; background: none; color: rgba(255,255,255,0.3);
   cursor: pointer; padding: 1px 3px; border-radius: 3px;
   font-size: 11px; opacity: 0; transition: opacity 0.1s; flex-shrink: 0;

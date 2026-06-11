@@ -3,6 +3,7 @@
 import { app, protocol, BrowserWindow, ipcMain, screen } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import { widgetBottomRightBounds, widgetResizeBounds } from './helpers/windowBoundsHelper'
 
 const Store = require('electron-store')
 const todoStore = new Store({ name: 'todos' })
@@ -17,6 +18,7 @@ const gotTheLock = app.requestSingleInstanceLock()
 let mainWindow = null
 let widgetWin = null
 let hoverInterval = null
+const WIDGET_DEFAULT_SIZE = { width: 300, height: 440 }
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true, stream: true } },
@@ -55,9 +57,14 @@ async function createWindow() {
 }
 
 function createWidgetWindow() {
+  const initialBounds = widgetBottomRightBounds(
+    screen.getPrimaryDisplay().workArea,
+    WIDGET_DEFAULT_SIZE.width,
+    WIDGET_DEFAULT_SIZE.height,
+  )
+
   widgetWin = new BrowserWindow({
-    width: 280,
-    height: 420,
+    ...initialBounds,
     frame: false,
     transparent: true,
     backgroundColor: '#00000000',
@@ -80,10 +87,6 @@ function createWidgetWindow() {
     : 'app://./index.html#widget'
   widgetWin.loadURL(url)
 
-  // Position: bottom-right corner with margin
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize
-  widgetWin.setPosition(width - 280, height - 420)
-
   widgetWin.on('closed', () => {
     widgetWin = null
     stopHoverDetection()
@@ -93,6 +96,17 @@ function createWidgetWindow() {
       app.quit()
     }
   })
+}
+
+function getWidgetWorkArea() {
+  if (!widgetWin || widgetWin.isDestroyed()) return screen.getPrimaryDisplay().workArea
+  return screen.getDisplayMatching(widgetWin.getBounds()).workArea
+}
+
+function keepWidgetVisible(width, height) {
+  if (!widgetWin || widgetWin.isDestroyed()) return
+  const bounds = widgetResizeBounds(widgetWin.getBounds(), getWidgetWorkArea(), width, height)
+  widgetWin.setBounds(bounds)
 }
 
 function startHoverDetection() {
@@ -139,11 +153,15 @@ ipcMain.handle('tasks:set', (_, items) => { tasksStore.set('items', items) })
 // ── IPC: widget ──
 ipcMain.handle('widget:resize', (_, width, height) => {
   if (!widgetWin || widgetWin.isDestroyed()) return
-  widgetWin.setSize(width, height)
+  keepWidgetVisible(width, height)
 })
 ipcMain.handle('widget:show', () => {
   if (!widgetWin) createWidgetWindow()
-  else widgetWin.show()
+  else {
+    const { width, height } = widgetWin.getBounds()
+    keepWidgetVisible(width, height)
+    widgetWin.show()
+  }
   if (mainWindow) mainWindow.hide()
 })
 
