@@ -9,6 +9,7 @@ const todoStore = new Store({ name: 'todos' })
 const configStore = new Store({ name: 'config' })
 const eventsStore = new Store({ name: 'events' })
 const backlogStore = new Store({ name: 'backlog' })
+const tasksStore = new Store({ name: 'tasks' })
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const gotTheLock = app.requestSingleInstanceLock()
@@ -130,6 +131,10 @@ ipcMain.handle('events:remove', (_, date) => { eventsStore.delete(date) })
 // ── IPC: backlog ──
 ipcMain.handle('backlog:getAll', () => backlogStore.get('items', []))
 ipcMain.handle('backlog:set', (_, items) => { backlogStore.set('items', items) })
+
+// ── IPC: tasks ──
+ipcMain.handle('tasks:getAll', () => tasksStore.get('items', []))
+ipcMain.handle('tasks:set', (_, items) => { tasksStore.set('items', items) })
 
 // ── IPC: widget ──
 ipcMain.handle('widget:resize', (_, width, height) => {
