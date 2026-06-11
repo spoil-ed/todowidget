@@ -53,12 +53,21 @@
     </div>
 
     <!-- ══════════ WEEK VIEW ══════════ -->
-    <div v-else-if="view === 'week'" class="w-week-grid">
+    <div
+      v-else-if="view === 'week'"
+      class="w-week-grid"
+      :class="{ dragging: isDraggingWeek }"
+      @pointerdown="startWeekDrag"
+      @pointermove="moveWeekDrag"
+      @pointerup="endWeekDrag"
+      @pointercancel="cancelWeekDrag"
+      @pointerleave="cancelWeekDrag"
+    >
       <div
         v-for="d in weekCells"
         :key="d.date"
         :class="['w-week-cell', { today: d.isToday, selected: d.date === widgetDate }]"
-        @click="pickDay(d.date)"
+        @click="pickWeekDay(d.date)"
       >
         <div class="w-week-head">
           <span class="w-wc-dow">{{ d.dow }}</span>
@@ -192,6 +201,10 @@ export default {
       newTodoText: '', newTodoDdlDate: '', newTodoDdlTime: '',
       newEventTitle: '', newEventStart: '09:00', newEventEnd: '10:00',
       eventError: '',
+      dragStartX: 0,
+      dragStartY: 0,
+      isDraggingWeek: false,
+      suppressWeekClick: false,
     }
   },
   created() {
@@ -280,6 +293,41 @@ export default {
     pickDay(date) {
       this.widgetDate = date
       this.switchView('day')
+    },
+    pickWeekDay(date) {
+      if (this.suppressWeekClick) {
+        this.suppressWeekClick = false
+        return
+      }
+      this.pickDay(date)
+    },
+    startWeekDrag(e) {
+      if (e.button !== undefined && e.button !== 0) return
+      e.currentTarget.setPointerCapture?.(e.pointerId)
+      this.dragStartX = e.clientX
+      this.dragStartY = e.clientY
+      this.isDraggingWeek = true
+    },
+    moveWeekDrag(e) {
+      if (!this.isDraggingWeek) return
+      const dx = e.clientX - this.dragStartX
+      const dy = e.clientY - this.dragStartY
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) e.preventDefault()
+    },
+    endWeekDrag(e) {
+      if (!this.isDraggingWeek) return
+      e.currentTarget.releasePointerCapture?.(e.pointerId)
+      const dx = e.clientX - this.dragStartX
+      this.isDraggingWeek = false
+      if (Math.abs(dx) < 50) return
+      this.suppressWeekClick = true
+      this.widgetDate = moment(this.widgetDate, 'YYYY-MM-DD')
+        .add(dx < 0 ? 1 : -1, 'week')
+        .format('YYYY-MM-DD')
+      window.setTimeout(() => { this.suppressWeekClick = false }, 0)
+    },
+    cancelWeekDrag() {
+      this.isDraggingWeek = false
     },
     exitWidget() { getIpc().invoke('widget:hide') },
     toggleClickThrough() {
@@ -422,6 +470,9 @@ html, body, #app {
   display: grid; grid-template-columns: repeat(7, 1fr);
   gap: 4px; padding: 10px 10px 8px;
   flex: 1; min-height: 0;
+  cursor: grab;
+  touch-action: pan-y;
+  &.dragging { cursor: grabbing; }
 }
 .w-week-cell {
   display: flex; flex-direction: column;

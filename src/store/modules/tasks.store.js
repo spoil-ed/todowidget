@@ -40,6 +40,7 @@ function migrateTasks(oldTodos, oldEvents, oldBacklog) {
 }
 
 const state = { tasks: [] }
+let subscribedToTaskUpdates = false
 
 function normalizeTaskFields(task) {
   const normalized = { ...task }
@@ -76,6 +77,12 @@ const mutations = {
 const actions = {
   async loadTasks({ commit }) {
     const ipc = window.require('electron').ipcRenderer
+    if (!subscribedToTaskUpdates) {
+      ipc.on('tasks:updated', (_, tasks) => {
+        commit('setTasks', Array.isArray(tasks) ? tasks : [])
+      })
+      subscribedToTaskUpdates = true
+    }
     const migrated = await ipc.invoke('config:get', 'tasks_migrated', false)
     let tasks = await tasksRepository.getAll()
     if (!migrated) {

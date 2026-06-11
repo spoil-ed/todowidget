@@ -37,17 +37,17 @@
         @click="selectDate(cell.date)"
       >{{ cell.dayNum }}</div>
     </div>
-    <div v-if="dateTasks.length" class="sidebar-day-summary">
+    <div v-if="dateItems.length" class="sidebar-day-summary">
       <div class="sds-label">{{ summaryLabel }}</div>
       <div
-        v-for="t in dateTasks"
-        :key="t.id"
+        v-for="item in dateItems"
+        :key="item.id"
         class="sds-item"
         @click="goToDay"
       >
-        <span v-if="t.kind === 'event'" class="sds-time">{{ t.startTime }}</span>
-        <span v-else-if="t.kind === 'ddl'" class="sds-time">⏰</span>
-        <span class="sds-text">{{ t.text }}</span>
+        <span v-if="item.type === 'event'" class="sds-time">{{ item.timeLabel }}</span>
+        <span v-else-if="item.type === 'ddl'" class="sds-time">{{ item.timeLabel || '截止' }}</span>
+        <span class="sds-text">{{ item.displayText }}</span>
       </div>
     </div>
   </div>
@@ -81,9 +81,8 @@ export default {
         dayNum: moment(cell.date, 'YYYY-MM-DD').date(),
       }))
     },
-    dateTasks() {
+    dateItems() {
       return calendarItemsForDate(this.$store.getters.tasks, this.selectedDate)
-        .map(item => item.task)
         .slice(0, 5)
     },
     summaryLabel() {
@@ -137,6 +136,15 @@ export default {
   padding: 3px 4px; border-radius: var(--radius-sm); cursor: pointer;
   &:hover { background: var(--bg-hover); }
 }
-.sds-time { font-size: 10px; color: var(--text-muted); width: 32px; flex-shrink: 0; }
+.sds-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  width: 86px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .sds-text { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>

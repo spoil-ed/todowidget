@@ -18,7 +18,7 @@ test('calendarItemsForDate returns events and todos for one date in display orde
   const items = calendarItemsForDate(tasks, '2026-06-11')
 
   expect(items.map(item => item.id)).toEqual(['event_1', 'event_2', 'ddl_1', 'todo_1'])
-  expect(items.map(item => item.timeLabel)).toEqual(['09:00', '12:30', '18:00', ''])
+  expect(items.map(item => item.timeLabel)).toEqual(['9:00 AM-9:30 AM', '12:30 PM-1:00 PM', '6:00 PM', ''])
   expect(items.map(item => item.displayText)).toEqual(['晨会', '午会', '提交发票', '写报告'])
 })
 

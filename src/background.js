@@ -148,7 +148,12 @@ ipcMain.handle('backlog:set', (_, items) => { backlogStore.set('items', items) }
 
 // ── IPC: tasks ──
 ipcMain.handle('tasks:getAll', () => tasksStore.get('items', []))
-ipcMain.handle('tasks:set', (_, items) => { tasksStore.set('items', items) })
+ipcMain.handle('tasks:set', (_, items) => {
+  tasksStore.set('items', items)
+  BrowserWindow.getAllWindows().forEach(win => {
+    if (!win.isDestroyed()) win.webContents.send('tasks:updated', items)
+  })
+})
 
 // ── IPC: widget ──
 ipcMain.handle('widget:resize', (_, width, height) => {

@@ -2,6 +2,19 @@ import { timeToMinutes } from './timeHelper'
 
 const END_OF_DAY_SORT = 24 * 60
 
+function formatAmPm(time) {
+  if (!time) return ''
+  const [hour, minute] = time.split(':').map(Number)
+  const period = hour >= 12 ? 'PM' : 'AM'
+  const displayHour = hour % 12 || 12
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`
+}
+
+function formatTimeRange(startTime, endTime) {
+  if (!startTime || !endTime) return startTime ? formatAmPm(startTime) : ''
+  return `${formatAmPm(startTime)}-${formatAmPm(endTime)}`
+}
+
 function isCalendarTask(task) {
   return task && (task.kind === 'event' || task.kind === 'day' || task.kind === 'ddl')
 }
@@ -13,13 +26,14 @@ function ddlTime(task) {
 
 function toCalendarItem(task) {
   if (task.kind === 'event') {
+    const timeLabel = formatTimeRange(task.startTime, task.endTime)
     return {
       id: task.id,
       type: 'event',
       task,
       displayText: task.text,
-      timeLabel: task.startTime || '',
-      rangeLabel: task.startTime && task.endTime ? `${task.startTime}-${task.endTime}` : '',
+      timeLabel,
+      rangeLabel: timeLabel,
       checked: !!task.checked,
       sortMinutes: task.startTime ? timeToMinutes(task.startTime) : END_OF_DAY_SORT,
     }
@@ -27,13 +41,14 @@ function toCalendarItem(task) {
 
   if (task.kind === 'ddl') {
     const time = ddlTime(task)
+    const timeLabel = formatAmPm(time)
     return {
       id: task.id,
       type: 'ddl',
       task,
       displayText: task.text,
-      timeLabel: time,
-      rangeLabel: time ? `截止 ${time}` : '截止',
+      timeLabel,
+      rangeLabel: timeLabel ? `截止 ${timeLabel}` : '截止',
       checked: !!task.checked,
       sortMinutes: time ? timeToMinutes(time) : END_OF_DAY_SORT + 1,
     }

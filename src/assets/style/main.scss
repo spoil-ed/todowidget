@@ -283,6 +283,9 @@ input, textarea {
   flex: 1;
   overflow: hidden;
   border-left: 1px solid var(--border);
+  cursor: grab;
+  touch-action: pan-y;
+  &.dragging { cursor: grabbing; }
 }
 
 .week-column {
