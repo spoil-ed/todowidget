@@ -44,9 +44,9 @@
         <span class="tl-ddl-label">{{ t.text }}</span>
       </div>
     </div>
-    <add-event-modal
+    <add-task-modal
       v-if="showModal"
-      :date="date"
+      :initial-date="date"
       :initial-time="modalInitialTime"
       @close="showModal = false"
     />
@@ -55,13 +55,12 @@
 
 <script>
 import { timeToMinutes, minutesToTime, calcTimelineRange } from '../helpers/timeHelper'
-
 import TimelineEvent from './TimelineEvent.vue'
-import AddEventModal from '../views/AddEventModal.vue'
+import AddTaskModal from '../views/AddTaskModal.vue'
 
 export default {
   name: 'TimelinePanel',
-  components: { TimelineEvent, AddEventModal },
+  components: { TimelineEvent, AddTaskModal },
   props: {
     date: { type: String, required: true },
   },
@@ -69,10 +68,13 @@ export default {
     return { showModal: false, modalInitialTime: '09:00' }
   },
   computed: {
-    events() { return this.$store.getters.eventsForDate(this.date) },
+    events() {
+      return this.$store.getters.tasksForDate(this.date)
+        .filter(t => t.kind === 'event')
+    },
     ddlMarkers() {
-      return (this.$store.getters.todosForDate(this.date) || [])
-        .filter(t => t.ddl && t.ddl.includes(' '))
+      return this.$store.getters.tasksForDate(this.date)
+        .filter(t => t.kind === 'ddl' && t.ddl && t.ddl.includes(' '))
         .map(t => ({ ...t, ddlTime: t.ddl.split(' ')[1] }))
     },
     range() {
@@ -87,10 +89,7 @@ export default {
       for (let h = startHour; h <= endHour; h++) {
         const minutes = h * 60
         if (minutes < this.range.start || minutes > this.range.end) continue
-        markers.push({
-          label: minutesToTime(minutes),
-          top: minutes - this.range.start,
-        })
+        markers.push({ label: minutesToTime(minutes), top: minutes - this.range.start })
       }
       return markers
     },
@@ -103,19 +102,12 @@ export default {
     },
     handleTimelineClick(e) {
       if (e.target.closest('.timeline-event')) return
-      const offsetY = e.offsetY
-      const clickedMinutes = this.range.start + offsetY
-      const snapped = Math.round(clickedMinutes / 15) * 15
+      const snapped = Math.round((this.range.start + e.offsetY) / 15) * 15
       this.modalInitialTime = minutesToTime(Math.min(snapped, 1380))
       this.showModal = true
     },
-    deleteEvent(id) {
-      this.$store.dispatch('deleteEvent', { date: this.date, id })
-    },
-    openModal(time) {
-      this.modalInitialTime = time
-      this.showModal = true
-    },
+    deleteEvent(id) { this.$store.dispatch('deleteTask', { id }) },
+    openModal(time) { this.modalInitialTime = time; this.showModal = true },
   },
 }
 </script>
