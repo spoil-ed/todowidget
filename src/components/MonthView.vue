@@ -80,14 +80,18 @@ export default {
       return ['一', '二', '三', '四', '五', '六', '日']
     },
     allTodos() {
-      return this.$store.getters.todosForDate(this.selectedDate)
+      return this.$store.getters.tasksForDate(this.selectedDate)
+        .filter(t => t.kind === 'day' || t.kind === 'ddl')
     },
     detailHeader() {
       return moment(this.selectedDate, 'YYYY-MM-DD').format('M月D日 dddd')
     },
   },
   methods: {
-    todosFor(date) { return this.$store.getters.todosForDate(date) },
+    todosFor(date) {
+      return this.$store.getters.tasksForDate(date)
+        .filter(t => t.kind === 'day' || t.kind === 'ddl')
+    },
     previewTodos(date) { return this.todosFor(date).slice(0, PREVIEW_MAX) },
     overflowCount(date) {
       const total = this.todosFor(date).length
@@ -97,11 +101,11 @@ export default {
     addTodo() {
       const text = this.newText.trim()
       if (!text) return
-      this.$store.dispatch('addTodo', { date: this.selectedDate, text })
+      this.$store.dispatch('addTask', { kind: 'day', date: this.selectedDate, text })
       this.newText = ''
     },
-    toggleTodo(id) { this.$store.dispatch('toggleTodo', { date: this.selectedDate, id }) },
-    deleteTodo(id) { this.$store.dispatch('deleteTodo', { date: this.selectedDate, id }) },
+    toggleTodo(id) { this.$store.dispatch('toggleTask', { id }) },
+    deleteTodo(id) { this.$store.dispatch('deleteTask', { id }) },
   },
 }
 </script>
