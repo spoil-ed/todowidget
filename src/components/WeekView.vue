@@ -51,18 +51,21 @@ export default {
     weekDates() { return weekRange(this.selectedDate) },
   },
   methods: {
-    todosFor(date) { return this.$store.getters.todosForDate(date) },
+    todosFor(date) {
+      return this.$store.getters.tasksForDate(date)
+        .filter(t => t.kind === 'day' || t.kind === 'ddl')
+    },
     weekdayLabel(date) { return moment(date, 'YYYY-MM-DD').format('ddd') },
     dayLabel(date) { return moment(date, 'YYYY-MM-DD').format('D') },
     selectDate(date) { this.$store.commit('setSelectedDate', date) },
     addTodo(date) {
       const text = (this.addTexts[date] || '').trim()
       if (!text) return
-      this.$store.dispatch('addTodo', { date, text })
+      this.$store.dispatch('addTask', { kind: 'day', date, text })
       this.addTexts[date] = ''
     },
-    toggleTodo(date, id) { this.$store.dispatch('toggleTodo', { date, id }) },
-    deleteTodo(date, id) { this.$store.dispatch('deleteTodo', { date, id }) },
+    toggleTodo(date, id) { this.$store.dispatch('toggleTask', { id }) },
+    deleteTodo(date, id) { this.$store.dispatch('deleteTask', { id }) },
   },
 }
 </script>
