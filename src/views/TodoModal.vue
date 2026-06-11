@@ -21,9 +21,8 @@
       </div>
 
       <div v-if="showDdl" class="tm-extra">
-        <label>截止</label>
-        <input type="date" v-model="ddlDate" />
-        <input type="time" v-model="ddlTime" :disabled="!ddlDate" />
+        <label>截止时间</label>
+        <input type="time" v-model="ddlTime" placeholder="不填则全天截止" />
       </div>
 
       <div v-if="showSchedule" class="tm-extra">
@@ -63,7 +62,7 @@ export default {
   methods: {
     toggleDdl() {
       this.showDdl = !this.showDdl
-      if (this.showDdl) this.showSchedule = false
+      if (this.showDdl) { this.showSchedule = false; this.ddlDate = this.date }
     },
     toggleSchedule() {
       this.showSchedule = !this.showSchedule

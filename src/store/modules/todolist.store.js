@@ -9,6 +9,11 @@ const state = {
 const getters = {
   todoLists: s => s.todoLists,
   todosForDate: s => date => s.todoLists[date] || [],
+  todosWithDdl: s =>
+    Object.entries(s.todoLists)
+      .flatMap(([date, todos]) => todos.map(t => ({ ...t, date })))
+      .filter(t => t.ddl)
+      .sort((a, b) => a.ddl.localeCompare(b.ddl)),
 }
 
 const mutations = {

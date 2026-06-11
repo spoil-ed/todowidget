@@ -17,7 +17,7 @@
           <button :class="{ active: activeView === 'month' }" @click="setView('month')">月</button>
         </div>
       </template>
-      <span v-else class="current-label">待办清单</span>
+      <span v-else class="current-label">{{ currentPage === 'deadline' ? '截止汇总' : '待办清单' }}</span>
 
       <button class="topbar-icon-btn" @click="enterWidget" title="桌面挂件">
         <i class="bi bi-window-sidebar"></i>
@@ -37,6 +37,7 @@
           <month-view v-else />
         </template>
         <backlog-view v-else-if="currentPage === 'backlog'" />
+        <deadline-view v-else-if="currentPage === 'deadline'" />
       </div>
     </div>
 
@@ -52,6 +53,7 @@ import MonthView from './components/MonthView.vue'
 import SideBar from './components/layout/SideBar.vue'
 import TodoModal from './views/TodoModal.vue'
 import BacklogView from './views/BacklogView.vue'
+import DeadlineView from './views/DeadlineView.vue'
 import WidgetView from './views/WidgetView.vue'
 import { weekRange } from './helpers/dateHelper'
 
@@ -63,7 +65,7 @@ function getIpc() {
 
 export default {
   name: 'App',
-  components: { DayView, WeekView, MonthView, SideBar, TodoModal, BacklogView, WidgetView },
+  components: { DayView, WeekView, MonthView, SideBar, TodoModal, BacklogView, WidgetView, DeadlineView },
   data() { return { showModal: false } },
   computed: {
     isWidgetMode() { return window.location.hash === '#widget' },

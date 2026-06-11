@@ -31,9 +31,8 @@
         <button class="qa-submit" @click="submit"><i class="bi bi-check-lg"></i></button>
       </div>
       <div v-if="showDdl && !showSchedule" class="qa-extra">
-        <label>截止</label>
-        <input type="date" v-model="ddlDate" />
-        <input type="time" v-model="ddlTime" :disabled="!ddlDate" />
+        <label>截止时间</label>
+        <input type="time" v-model="ddlTime" placeholder="不填则全天截止" />
       </div>
       <div v-if="showSchedule" class="qa-extra">
         <input type="time" v-model="startTime" />
@@ -93,7 +92,7 @@ export default {
     },
     toggleDdl() {
       this.showDdl = !this.showDdl
-      if (this.showDdl) this.showSchedule = false
+      if (this.showDdl) { this.showSchedule = false; this.ddlDate = this.date }
     },
     toggleSchedule() {
       this.showSchedule = !this.showSchedule

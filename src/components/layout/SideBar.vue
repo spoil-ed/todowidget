@@ -17,6 +17,14 @@
         <i class="bi bi-list-check"></i>
         <span>待办清单</span>
       </button>
+      <button
+        class="sidebar-tab"
+        :class="{ active: currentPage === 'deadline' }"
+        @click="$store.commit('setPage', 'deadline')"
+      >
+        <i class="bi bi-alarm"></i>
+        <span>截止</span>
+      </button>
     </div>
     <div class="sidebar-nav">
       <button @click="prevMonth"><i class="bi bi-chevron-left"></i></button>
