@@ -79,7 +79,7 @@
         <div v-for="e in events" :key="e.id" class="w-event-row">
           <span class="w-event-dot"></span>
           <span class="w-event-time">{{ e.startTime }}</span>
-          <span class="w-event-title">{{ e.title }}</span>
+          <span class="w-event-title">{{ e.text }}</span>
           <button class="w-del-btn" @click="deleteEvent(e.id)"><i class="bi bi-x"></i></button>
         </div>
         <div v-if="!events.length && !addingEvent" class="w-empty-hint">无日程</div>
@@ -179,7 +179,7 @@ export default {
         ...cell,
         inMonth: cell.isCurrentMonth,
         num: moment(cell.date, 'YYYY-MM-DD').date(),
-        count: (this.$store.getters.todosForDate(cell.date) || []).filter(t => !t.checked).length,
+        count: this.$store.getters.tasksForDate(cell.date).filter(t => !t.checked).length,
       }))
     },
     weekCells() {
@@ -193,16 +193,18 @@ export default {
           dow: d.format('dd').slice(0, 1),
           num: d.date(),
           isToday: date === today(),
-          count: (this.$store.getters.todosForDate(date) || []).filter(t => !t.checked).length,
+          count: this.$store.getters.tasksForDate(date).filter(t => !t.checked).length,
         }
       })
     },
     events() {
-      return (this.$store.getters.eventsForDate(this.widgetDate) || [])
+      return this.$store.getters.tasksForDate(this.widgetDate)
+        .filter(t => t.kind === 'event')
         .slice().sort((a, b) => a.startTime.localeCompare(b.startTime))
     },
     todos() {
-      return this.$store.getters.todosForDate(this.widgetDate) || []
+      return this.$store.getters.tasksForDate(this.widgetDate)
+        .filter(t => t.kind === 'day' || t.kind === 'ddl')
     },
   },
   methods: {
@@ -228,20 +230,18 @@ export default {
       this.clickThrough = !this.clickThrough
       getIpc().invoke('widget:setClickThrough', this.clickThrough)
     },
-    refresh() {
-      this.$store.dispatch('loadAllEvents')
-      getIpc().invoke('todos:getAll').then(all => this.$store.commit('initTodos', all))
-    },
-    toggleTodo(id) { this.$store.dispatch('toggleTodo', { date: this.widgetDate, id }) },
-    deleteTodo(id) { this.$store.dispatch('deleteTodo', { date: this.widgetDate, id }) },
-    deleteEvent(id) { this.$store.dispatch('deleteEvent', { date: this.widgetDate, id }) },
+    refresh() { this.$store.dispatch('loadTasks') },
+    toggleTodo(id) { this.$store.dispatch('toggleTask', { id }) },
+    deleteTodo(id) { this.$store.dispatch('deleteTask', { id }) },
+    deleteEvent(id) { this.$store.dispatch('deleteTask', { id }) },
     submitTodo() {
       const text = this.newTodoText.trim()
       if (!text) return
       const ddl = this.newTodoDdlDate
         ? (this.newTodoDdlTime ? `${this.newTodoDdlDate} ${this.newTodoDdlTime}` : this.newTodoDdlDate)
         : null
-      this.$store.dispatch('addTodo', { date: this.widgetDate, text, ddl })
+      const kind = ddl ? 'ddl' : 'day'
+      this.$store.dispatch('addTask', { kind, date: this.widgetDate, text, ...(ddl ? { ddl } : {}) })
       this.newTodoText = ''; this.newTodoDdlDate = ''; this.newTodoDdlTime = ''
       this.addingTodo = false
     },
@@ -249,8 +249,8 @@ export default {
       const title = this.newEventTitle.trim()
       if (!title) { this.eventError = '请填写内容'; return }
       if (this.newEventStart >= this.newEventEnd) { this.eventError = '结束需晚于开始'; return }
-      this.$store.dispatch('addEvent', {
-        date: this.widgetDate, title,
+      this.$store.dispatch('addTask', {
+        kind: 'event', date: this.widgetDate, text: title,
         startTime: this.newEventStart, endTime: this.newEventEnd,
       })
       this.newEventTitle = ''; this.newEventStart = '09:00'; this.newEventEnd = '10:00'
