@@ -103,15 +103,17 @@ export default {
       if (!text) { this.error = '请填写内容'; return }
       if (this.showSchedule) {
         if (this.startTime >= this.endTime) { this.error = '结束时间需晚于开始'; return }
-        this.$store.dispatch('addEvent', {
-          date: this.date, title: text,
+        this.$store.dispatch('addTask', {
+          kind: 'event', date: this.date, text,
           startTime: this.startTime, endTime: this.endTime,
         })
-      } else {
+      } else if (this.showDdl) {
         const ddl = this.ddlDate
           ? (this.ddlTime ? `${this.ddlDate} ${this.ddlTime}` : this.ddlDate)
-          : null
-        this.$store.dispatch('addTodo', { date: this.date, text, ddl })
+          : this.date
+        this.$store.dispatch('addTask', { kind: 'ddl', date: this.date, text, ddl })
+      } else {
+        this.$store.dispatch('addTask', { kind: 'day', date: this.date, text })
       }
       this.cancel()
     },
