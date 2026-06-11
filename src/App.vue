@@ -1,7 +1,6 @@
 <template>
   <widget-view v-if="isWidgetMode" />
   <div v-else id="app">
-    <!-- Top bar -->
     <div class="app-topbar">
       <span class="app-title">TodoWidget</span>
 
@@ -17,17 +16,16 @@
           <button :class="{ active: activeView === 'month' }" @click="setView('month')">月</button>
         </div>
       </template>
-      <span v-else class="current-label">{{ currentPage === 'deadline' ? '截止汇总' : '待办清单' }}</span>
+      <span v-else class="current-label">待办</span>
 
       <button class="topbar-icon-btn" @click="enterWidget" title="桌面挂件">
         <i class="bi bi-window-sidebar"></i>
       </button>
-      <button class="add-btn" @click="showModal = true" title="添加待办">
+      <button class="add-btn" @click="showModal = true" title="添加任务">
         <i class="bi bi-plus-lg"></i>
       </button>
     </div>
 
-    <!-- Main body -->
     <div class="app-body">
       <side-bar />
       <div class="main-content">
@@ -36,12 +34,11 @@
           <week-view v-else-if="activeView === 'week'" />
           <month-view v-else />
         </template>
-        <backlog-view v-else-if="currentPage === 'backlog'" />
-        <deadline-view v-else-if="currentPage === 'deadline'" />
+        <task-list-view v-else />
       </div>
     </div>
 
-    <todo-modal v-if="showModal" @close="showModal = false" />
+    <add-task-modal v-if="showModal" @close="showModal = false" />
   </div>
 </template>
 
@@ -51,9 +48,8 @@ import DayView from './components/DayView.vue'
 import WeekView from './components/WeekView.vue'
 import MonthView from './components/MonthView.vue'
 import SideBar from './components/layout/SideBar.vue'
-import TodoModal from './views/TodoModal.vue'
-import BacklogView from './views/BacklogView.vue'
-import DeadlineView from './views/DeadlineView.vue'
+import AddTaskModal from './views/AddTaskModal.vue'
+import TaskListView from './views/TaskListView.vue'
 import WidgetView from './views/WidgetView.vue'
 import { weekRange } from './helpers/dateHelper'
 
@@ -65,7 +61,7 @@ function getIpc() {
 
 export default {
   name: 'App',
-  components: { DayView, WeekView, MonthView, SideBar, TodoModal, BacklogView, WidgetView, DeadlineView },
+  components: { DayView, WeekView, MonthView, SideBar, AddTaskModal, TaskListView, WidgetView },
   data() { return { showModal: false } },
   computed: {
     isWidgetMode() { return window.location.hash === '#widget' },
