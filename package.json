@@ -1,6 +1,6 @@
 {
   "name": "todowidget",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Minimal Windows TODO app with calendar views",
   "author": "TodoWidget",
