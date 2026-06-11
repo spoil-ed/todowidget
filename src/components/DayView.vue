@@ -33,17 +33,19 @@ import QuickAdd from './QuickAdd.vue'
 export default {
   name: 'DayView',
   components: { TodoItem, TimelinePanel, QuickAdd },
-  data() { return {} },
   computed: {
     selectedDate() { return this.$store.getters.selectedDate },
-    todos() { return this.$store.getters.todosForDate(this.selectedDate) },
+    todos() {
+      return this.$store.getters.tasksForDate(this.selectedDate)
+        .filter(t => t.kind === 'day' || t.kind === 'ddl')
+    },
     headerLabel() {
       return moment(this.selectedDate, 'YYYY-MM-DD').format('YYYY年M月D日 dddd')
     },
   },
   methods: {
-    toggleTodo(id) { this.$store.dispatch('toggleTodo', { date: this.selectedDate, id }) },
-    deleteTodo(id) { this.$store.dispatch('deleteTodo', { date: this.selectedDate, id }) },
+    toggleTodo(id) { this.$store.dispatch('toggleTask', { id }) },
+    deleteTodo(id) { this.$store.dispatch('deleteTask', { id }) },
   },
 }
 </script>
