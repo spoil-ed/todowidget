@@ -30,7 +30,7 @@ function migrateTasks(oldTodos, oldEvents, oldBacklog) {
   if (Array.isArray(oldBacklog)) {
     for (const b of oldBacklog) {
       tasks.push({
-        id: b.id, text: b.text, kind: 'free',
+        id: b.id, text: b.title, kind: 'free',
         checked: b.status === 'done',
         subtasks: b.subtasks || [],
       })
@@ -47,7 +47,7 @@ const getters = {
   overdueTasks: s => {
     const now = moment()
     return s.tasks.filter(t => {
-      if (t.kind !== 'ddl' || t.checked) return false
+      if (t.kind !== 'ddl' || t.checked || !t.ddl) return false
       const d = t.ddl.includes(' ')
         ? moment(t.ddl, 'YYYY-MM-DD HH:mm')
         : moment(t.ddl, 'YYYY-MM-DD').endOf('day')
@@ -79,7 +79,7 @@ const actions = {
     commit('setTasks', tasks)
   },
   addTask({ commit, state }, task) {
-    const newTask = { id: uniqueId('task_'), checked: false, ...task }
+    const newTask = { ...task, id: uniqueId('task_'), checked: false }
     const tasks = [...state.tasks, newTask]
     commit('setTasks', tasks)
     tasksRepository.set(tasks)
