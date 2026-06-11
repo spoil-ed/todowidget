@@ -9,14 +9,8 @@ export function minutesToTime(minutes) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-export function calcTimelineRange(events, extraMinutes = []) {
-  const allPoints = [
-    ...events.map(e => timeToMinutes(e.startTime)),
-    ...events.map(e => timeToMinutes(e.endTime)),
-    ...extraMinutes,
-  ]
-  if (!allPoints.length) return { start: 480, end: 1320 }
-  const start = Math.max(0, Math.min(...allPoints) - 60)
-  const end = Math.min(1440, Math.max(...allPoints) + 60)
-  return { start, end }
+export const FULL_DAY_RANGE = { start: 0, end: 1440 }
+
+export function calcTimelineRange() {
+  return { ...FULL_DAY_RANGE }
 }

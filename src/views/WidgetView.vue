@@ -35,7 +35,19 @@
           @click="pickDay(cell.date)"
         >
           <span class="w-mc-num">{{ cell.num }}</span>
-          <span v-if="cell.count" class="w-mc-dot"></span>
+          <div class="w-mc-items">
+            <div
+              v-for="item in cell.preview"
+              :key="item.id"
+              class="w-mc-item"
+              :class="[item.type, { done: item.checked }]"
+              :title="item.rangeLabel ? `${item.rangeLabel} ${item.displayText}` : item.displayText"
+            >
+              <span v-if="item.timeLabel" class="w-mc-time">{{ item.timeLabel }}</span>
+              <span class="w-mc-text">{{ item.displayText }}</span>
+            </div>
+            <div v-if="cell.overflow" class="w-mc-more">+{{ cell.overflow }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -48,9 +60,36 @@
         :class="['w-week-cell', { today: d.isToday, selected: d.date === widgetDate }]"
         @click="pickDay(d.date)"
       >
-        <span class="w-wc-dow">{{ d.dow }}</span>
-        <span class="w-wc-num">{{ d.num }}</span>
-        <span v-if="d.count" class="w-wc-badge">{{ d.count }}</span>
+        <div class="w-week-head">
+          <span class="w-wc-dow">{{ d.dow }}</span>
+          <span class="w-wc-num">{{ d.num }}</span>
+        </div>
+        <div class="w-week-zone w-week-events">
+          <div
+            v-for="event in d.events"
+            :key="event.id"
+            class="w-week-item event"
+            :title="event.rangeLabel ? `${event.rangeLabel} ${event.displayText}` : event.displayText"
+          >
+            <span class="w-week-time">{{ event.timeLabel }}</span>
+            <span class="w-week-text">{{ event.displayText }}</span>
+          </div>
+          <span v-if="!d.events.length" class="w-week-empty">无日程</span>
+        </div>
+        <div class="w-week-zone w-week-todos">
+          <div
+            v-for="todo in d.todos"
+            :key="todo.id"
+            class="w-week-item"
+            :class="[todo.type, { done: todo.checked }]"
+            :title="todo.rangeLabel ? `${todo.rangeLabel} ${todo.displayText}` : todo.displayText"
+          >
+            <span v-if="todo.timeLabel" class="w-week-time">{{ todo.timeLabel }}</span>
+            <span class="w-week-text">{{ todo.displayText }}</span>
+          </div>
+          <span v-if="!d.todos.length" class="w-week-empty">无待办</span>
+        </div>
+        <span v-if="d.overflow" class="w-week-more">+{{ d.overflow }}</span>
       </div>
     </div>
 
@@ -78,7 +117,7 @@
         </div>
         <div v-for="e in events" :key="e.id" class="w-event-row">
           <span class="w-event-dot"></span>
-          <span class="w-event-time">{{ e.startTime }}</span>
+          <span class="w-event-time">{{ e.startTime }}-{{ e.endTime }}</span>
           <span class="w-event-title">{{ e.text }}</span>
           <button class="w-del-btn" @click="deleteEvent(e.id)"><i class="bi bi-x"></i></button>
         </div>
@@ -128,8 +167,12 @@
 <script>
 import moment from 'moment'
 import { today, monthGrid } from '../helpers/dateHelper'
+import { calendarItemsForDate, previewCalendarItems } from '../helpers/calendarItemsHelper'
 
-const SIZES = { day: [280, 420], week: [280, 320], month: [320, 430] }
+const SIZES = { day: [300, 440], week: [460, 360], month: [460, 470] }
+const WIDGET_MONTH_PREVIEW_MAX = 2
+const WIDGET_WEEK_EVENTS_MAX = 2
+const WIDGET_WEEK_TODOS_MAX = 3
 
 let ipc = null
 function getIpc() {
@@ -174,13 +217,18 @@ export default {
       return m.format('M月D日 ddd')
     },
     dowNames() { return ['一','二','三','四','五','六','日'] },
+    allTasks() { return this.$store.getters.tasks },
     monthCells() {
-      return monthGrid(this.widgetDate).flat().map(cell => ({
-        ...cell,
-        inMonth: cell.isCurrentMonth,
-        num: moment(cell.date, 'YYYY-MM-DD').date(),
-        count: this.$store.getters.tasksForDate(cell.date).filter(t => !t.checked).length,
-      }))
+      return monthGrid(this.widgetDate).flat().map(cell => {
+        const preview = previewCalendarItems(this.allTasks, cell.date, WIDGET_MONTH_PREVIEW_MAX)
+        return {
+          ...cell,
+          inMonth: cell.isCurrentMonth,
+          num: moment(cell.date, 'YYYY-MM-DD').date(),
+          preview: preview.items,
+          overflow: preview.overflowCount,
+        }
+      })
     },
     weekCells() {
       const m = moment(this.widgetDate, 'YYYY-MM-DD')
@@ -188,12 +236,19 @@ export default {
       return Array.from({ length: 7 }, (_, i) => {
         const d = mon.clone().add(i, 'days')
         const date = d.format('YYYY-MM-DD')
+        const items = calendarItemsForDate(this.allTasks, date)
+        const events = items.filter(item => item.type === 'event')
+        const todos = items.filter(item => item.type !== 'event')
+        const visibleEvents = events.slice(0, WIDGET_WEEK_EVENTS_MAX)
+        const visibleTodos = todos.slice(0, WIDGET_WEEK_TODOS_MAX)
         return {
           date,
           dow: d.format('dd').slice(0, 1),
           num: d.date(),
           isToday: date === today(),
-          count: this.$store.getters.tasksForDate(date).filter(t => !t.checked).length,
+          events: visibleEvents,
+          todos: visibleTodos,
+          overflow: Math.max(0, items.length - visibleEvents.length - visibleTodos.length),
         }
       })
     },
@@ -203,8 +258,9 @@ export default {
         .slice().sort((a, b) => a.startTime.localeCompare(b.startTime))
     },
     todos() {
-      return this.$store.getters.tasksForDate(this.widgetDate)
-        .filter(t => t.kind === 'day' || t.kind === 'ddl')
+      return calendarItemsForDate(this.allTasks, this.widgetDate)
+        .filter(item => item.type !== 'event')
+        .map(item => item.task)
     },
   },
   methods: {
@@ -327,46 +383,77 @@ html, body, #app {
 }
 .w-month-grid {
   display: grid; grid-template-columns: repeat(7, 1fr);
-  gap: 2px; flex: 1;
+  grid-template-rows: repeat(6, minmax(0, 1fr));
+  gap: 2px; flex: 1; min-height: 0;
 }
 .w-month-cell {
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
+  align-items: stretch; justify-content: flex-start;
   padding: 4px 2px; border-radius: 6px;
-  cursor: pointer; min-height: 36px;
+  cursor: pointer; min-height: 0; overflow: hidden;
   transition: background 0.1s;
   &:hover { background: rgba(255,255,255,0.1); }
   &.today .w-mc-num { color: #4a9eff; font-weight: 700; }
   &.selected { background: rgba(74,158,255,0.25); }
   &.other-month .w-mc-num { color: rgba(255,255,255,0.2); }
 }
-.w-mc-num { font-size: 12px; color: rgba(255,255,255,0.82); line-height: 1; }
-.w-mc-dot {
-  width: 4px; height: 4px; border-radius: 50%;
-  background: #4a9eff; margin-top: 3px;
+.w-mc-num {
+  font-size: 12px; color: rgba(255,255,255,0.82); line-height: 1;
+  text-align: center; flex-shrink: 0; margin-bottom: 3px;
 }
+.w-mc-items { display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow: hidden; }
+.w-mc-item {
+  display: flex; align-items: center; gap: 2px;
+  min-width: 0; color: rgba(255,255,255,0.58);
+  font-size: 9px; line-height: 1.25;
+  &.event { color: rgba(97,177,255,0.95); }
+  &.ddl { color: rgba(255,118,118,0.9); }
+  &.done { opacity: 0.45; text-decoration: line-through; }
+}
+.w-mc-time { flex-shrink: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.w-mc-text { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.w-mc-more { font-size: 9px; color: rgba(255,255,255,0.32); line-height: 1.2; }
 
 /* ── Week view ── */
 .w-week-grid {
   display: grid; grid-template-columns: repeat(7, 1fr);
   gap: 4px; padding: 10px 10px 8px;
-  flex: 1; align-content: start;
+  flex: 1; min-height: 0;
 }
 .w-week-cell {
   display: flex; flex-direction: column;
-  align-items: center; gap: 3px;
-  padding: 6px 2px; border-radius: 8px;
-  cursor: pointer;
+  align-items: stretch; gap: 3px;
+  padding: 6px 4px; border-radius: 8px;
+  cursor: pointer; min-width: 0; min-height: 0; overflow: hidden;
   &:hover { background: rgba(255,255,255,0.08); }
   &.today .w-wc-num { color: #4a9eff; }
   &.selected { background: rgba(255,255,255,0.14); }
 }
+.w-week-head { display: flex; align-items: baseline; justify-content: center; gap: 3px; flex-shrink: 0; }
 .w-wc-dow { font-size: 10px; color: rgba(255,255,255,0.4); }
 .w-wc-num { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.85); }
-.w-wc-badge {
-  font-size: 9px; background: #4a9eff; color: white;
-  border-radius: 8px; padding: 0 4px; min-width: 14px; text-align: center;
+.w-week-zone {
+  display: flex; flex-direction: column; gap: 2px;
+  min-height: 0; overflow: hidden;
 }
+.w-week-events {
+  flex: 0 0 43%;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding-bottom: 3px;
+}
+.w-week-todos { flex: 1; }
+.w-week-item {
+  display: flex; align-items: center; gap: 3px;
+  min-width: 0; font-size: 10px; line-height: 1.25;
+  color: rgba(255,255,255,0.62);
+  &.event { color: rgba(97,177,255,0.95); }
+  &.ddl { color: rgba(255,118,118,0.88); }
+  &.done { opacity: 0.45; text-decoration: line-through; }
+}
+.w-week-time { flex-shrink: 0; font-size: 9px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.w-week-text { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.w-week-empty { font-size: 9px; color: rgba(255,255,255,0.20); line-height: 1.25; }
+.w-week-more { font-size: 9px; color: rgba(255,255,255,0.28); flex-shrink: 0; }
 
 /* ── Day body ── */
 .w-body {

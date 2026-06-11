@@ -1,6 +1,7 @@
 <template>
   <div
     class="timeline-event"
+    :class="{ compact: isCompact }"
     :style="{ top: topPx + 'px', height: heightPx + 'px' }"
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
@@ -23,6 +24,9 @@ export default {
   },
   emits: ['delete'],
   data() { return { hovered: false } },
+  computed: {
+    isCompact() { return this.heightPx < 38 },
+  },
 }
 </script>
 
@@ -34,16 +38,27 @@ export default {
   background: var(--accent, #4a90d9);
   color: #fff;
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 3px 6px;
   font-size: 12px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  gap: 1px;
   overflow: hidden;
   cursor: default;
-  min-height: 20px;
+  min-height: 28px;
+  line-height: 1.15;
+}
+.timeline-event.compact {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
 }
 .tl-event-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tl-event-time { font-size: 11px; opacity: 0.85; }
+.tl-event-time { font-size: 11px; opacity: 0.85; white-space: nowrap; flex-shrink: 0; }
+.compact .tl-event-title { min-width: 0; }
+.compact .tl-event-time { font-size: 10px; }
 .tl-event-delete {
   position: absolute;
   top: 2px;

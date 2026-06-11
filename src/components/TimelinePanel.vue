@@ -6,42 +6,48 @@
         <i class="bi bi-plus"></i>
       </button>
     </div>
-    <div
-      class="timeline-scroll"
-      :style="{ height: totalHeight + 'px' }"
-      @click="handleTimelineClick"
-      ref="scrollArea"
-    >
-      <!-- Hour markers -->
-      <div
-        v-for="hour in hourMarkers"
-        :key="hour.label"
-        class="tl-hour-marker"
-        :style="{ top: hour.top + 'px' }"
-      >
-        <span class="tl-hour-label">{{ hour.label }}</span>
-        <div class="tl-hour-line"></div>
-      </div>
-      <!-- Event blocks -->
-      <timeline-event
-        v-for="event in events"
-        :key="event.id"
-        :event="event"
-        :top-px="eventTop(event)"
-        :height-px="eventHeight(event)"
-        @delete="deleteEvent(event.id)"
-      />
-      <!-- DDL markers -->
-      <div
-        v-for="t in ddlMarkers"
-        :key="t.id"
-        class="tl-ddl-marker"
-        :style="{ top: ddlMarkerTop(t) + 'px' }"
-        :class="{ done: t.checked }"
-        :title="t.text"
-      >
-        <span class="tl-ddl-time">{{ t.ddlTime }}</span>
-        <span class="tl-ddl-label">{{ t.text }}</span>
+    <div class="timeline-scroll" @click="handleTimelineClick" ref="scrollArea">
+      <div class="timeline-canvas" :style="{ height: totalHeight + 'px' }" ref="canvas">
+        <!-- Hour markers -->
+        <div
+          v-for="hour in hourMarkers"
+          :key="hour.label"
+          class="tl-hour-marker"
+          :style="{ top: hour.top + 'px' }"
+        >
+          <span class="tl-hour-label">{{ hour.label }}</span>
+          <div class="tl-hour-line"></div>
+        </div>
+        <!-- Current time -->
+        <div
+          v-if="showCurrentTime"
+          class="tl-current-time"
+          :style="{ top: currentTimeTop + 'px' }"
+        >
+          <span class="tl-current-label">{{ currentTimeLabel }}</span>
+          <div class="tl-current-line"></div>
+        </div>
+        <!-- Event blocks -->
+        <timeline-event
+          v-for="event in events"
+          :key="event.id"
+          :event="event"
+          :top-px="eventTop(event)"
+          :height-px="eventHeight(event)"
+          @delete="deleteEvent(event.id)"
+        />
+        <!-- DDL markers -->
+        <div
+          v-for="t in ddlMarkers"
+          :key="t.id"
+          class="tl-ddl-marker"
+          :style="{ top: ddlMarkerTop(t) + 'px' }"
+          :class="{ done: t.checked }"
+          :title="t.text"
+        >
+          <span class="tl-ddl-time">{{ t.ddlTime }}</span>
+          <span class="tl-ddl-label">{{ t.text }}</span>
+        </div>
       </div>
     </div>
     <add-task-modal
@@ -55,6 +61,7 @@
 
 <script>
 import { timeToMinutes, minutesToTime, calcTimelineRange } from '../helpers/timeHelper'
+import { today } from '../helpers/dateHelper'
 import TimelineEvent from './TimelineEvent.vue'
 import AddTaskModal from '../views/AddTaskModal.vue'
 
@@ -65,23 +72,52 @@ export default {
     date: { type: String, required: true },
   },
   data() {
-    return { showModal: false, modalInitialTime: '09:00' }
+    return {
+      showModal: false,
+      modalInitialTime: '09:00',
+      now: new Date(),
+      clockTimer: null,
+    }
+  },
+  mounted() {
+    this.clockTimer = setInterval(() => { this.now = new Date() }, 60000)
+    this.$nextTick(this.scrollToInitialTime)
+  },
+  beforeUnmount() {
+    if (this.clockTimer) clearInterval(this.clockTimer)
+  },
+  watch: {
+    date() {
+      this.$nextTick(this.scrollToInitialTime)
+    },
   },
   computed: {
     events() {
       return this.$store.getters.tasksForDate(this.date)
         .filter(t => t.kind === 'event')
+        .slice()
+        .sort((a, b) => a.startTime.localeCompare(b.startTime))
     },
     ddlMarkers() {
       return this.$store.getters.tasksForDate(this.date)
         .filter(t => t.kind === 'ddl' && t.ddl && t.ddl.includes(' '))
         .map(t => ({ ...t, ddlTime: t.ddl.split(' ')[1] }))
+        .sort((a, b) => a.ddlTime.localeCompare(b.ddlTime))
     },
     range() {
-      const ddlMins = this.ddlMarkers.map(t => timeToMinutes(t.ddlTime))
-      return calcTimelineRange(this.events, ddlMins)
+      return calcTimelineRange()
     },
     totalHeight() { return this.range.end - this.range.start },
+    currentMinutes() {
+      return this.now.getHours() * 60 + this.now.getMinutes()
+    },
+    showCurrentTime() {
+      return this.date === today()
+        && this.currentMinutes >= this.range.start
+        && this.currentMinutes <= this.range.end
+    },
+    currentTimeTop() { return this.currentMinutes - this.range.start },
+    currentTimeLabel() { return minutesToTime(this.currentMinutes) },
     hourMarkers() {
       const markers = []
       const startHour = Math.floor(this.range.start / 60)
@@ -98,13 +134,22 @@ export default {
     ddlMarkerTop(t) { return timeToMinutes(t.ddlTime) - this.range.start },
     eventTop(event) { return timeToMinutes(event.startTime) - this.range.start },
     eventHeight(event) {
-      return Math.max(20, timeToMinutes(event.endTime) - timeToMinutes(event.startTime))
+      return Math.max(28, timeToMinutes(event.endTime) - timeToMinutes(event.startTime))
     },
     handleTimelineClick(e) {
       if (e.target.closest('.timeline-event')) return
-      const snapped = Math.round((this.range.start + e.offsetY) / 15) * 15
-      this.modalInitialTime = minutesToTime(Math.min(snapped, 1380))
+      const canvas = this.$refs.canvas
+      if (!canvas) return
+      const y = e.clientY - canvas.getBoundingClientRect().top
+      const snapped = Math.round((this.range.start + y) / 15) * 15
+      this.modalInitialTime = minutesToTime(Math.min(Math.max(snapped, 0), 1425))
       this.showModal = true
+    },
+    scrollToInitialTime() {
+      const scrollArea = this.$refs.scrollArea
+      if (!scrollArea) return
+      const target = this.date === today() ? this.currentTimeTop : timeToMinutes('08:00')
+      scrollArea.scrollTop = Math.max(0, target - scrollArea.clientHeight * 0.35)
     },
     deleteEvent(id) { this.$store.dispatch('deleteTask', { id }) },
     openModal(time) { this.modalInitialTime = time; this.showModal = true },
@@ -139,10 +184,14 @@ export default {
   padding: 0 4px;
 }
 .timeline-scroll {
-  position: relative;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
   cursor: crosshair;
+}
+.timeline-canvas {
+  position: relative;
+  min-height: 100%;
 }
 .tl-hour-marker {
   position: absolute;
@@ -164,6 +213,31 @@ export default {
   flex: 1;
   height: 1px;
   background: var(--border);
+}
+.tl-current-time {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  z-index: 4;
+  pointer-events: none;
+}
+.tl-current-label {
+  width: 44px;
+  text-align: right;
+  font-size: 10px;
+  color: var(--danger);
+  padding-right: 6px;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tl-current-line {
+  flex: 1;
+  height: 2px;
+  background: var(--danger);
+  box-shadow: 0 0 0 1px rgba(229,62,62,0.12);
 }
 .tl-ddl-marker {
   position: absolute;

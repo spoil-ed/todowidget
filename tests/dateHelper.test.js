@@ -1,3 +1,5 @@
+/* eslint-env jest */
+
 const { today, weekRange, monthGrid, formatDate, parseDate } = require('../src/helpers/dateHelper')
 
 describe('today()', () => {

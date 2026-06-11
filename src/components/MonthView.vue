@@ -20,11 +20,15 @@
       >
         <div class="cell-date">{{ cell.dayNum }}</div>
         <div
-          v-for="todo in previewTodos(cell.date)"
-          :key="todo.id"
-          class="cell-todo-preview"
-          :class="{ done: todo.checked }"
-        >{{ todo.text }}</div>
+          v-for="item in previewItems(cell.date)"
+          :key="item.id"
+          class="cell-calendar-preview"
+          :class="[item.type, { done: item.checked }]"
+          :title="item.rangeLabel ? `${item.rangeLabel} ${item.displayText}` : item.displayText"
+        >
+          <span v-if="item.timeLabel" class="cell-item-time">{{ item.timeLabel }}</span>
+          <span class="cell-item-text">{{ item.displayText }}</span>
+        </div>
         <div v-if="overflowCount(cell.date) > 0" class="cell-overflow">
           +{{ overflowCount(cell.date) }} 项
         </div>
@@ -34,15 +38,24 @@
     <!-- Detail panel for selected date -->
     <div class="month-detail-panel" v-if="selectedDate">
       <div class="detail-header">
-        {{ detailHeader }} ({{ allTodos.length }} 项)
+        {{ detailHeader }} ({{ allItems.length }} 项)
       </div>
-      <todo-item
-        v-for="todo in allTodos"
-        :key="todo.id"
-        :todo="todo"
-        @toggle="toggleTodo(todo.id)"
-        @delete="deleteTodo(todo.id)"
-      />
+      <template v-for="item in allItems" :key="item.id">
+        <div v-if="item.type === 'event'" class="detail-event-row">
+          <span class="detail-event-time">{{ item.rangeLabel }}</span>
+          <span class="detail-event-title">{{ item.displayText }}</span>
+          <button class="detail-event-delete" @click="deleteTodo(item.id)" title="删除">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+        <todo-item
+          v-else
+          :todo="item.task"
+          @toggle="toggleTodo(item.id)"
+          @delete="deleteTodo(item.id)"
+        />
+      </template>
+      <div v-if="allItems.length === 0" class="month-empty-hint">这天还没有事项</div>
       <div class="detail-add-input">
         <input
           v-model="newText"
@@ -57,9 +70,10 @@
 <script>
 import moment from 'moment'
 import { monthGrid, today } from '../helpers/dateHelper'
+import { calendarItemsForDate, previewCalendarItems } from '../helpers/calendarItemsHelper'
 import TodoItem from './TodoItem.vue'
 
-const PREVIEW_MAX = 2
+const PREVIEW_MAX = 3
 
 export default {
   name: 'MonthView',
@@ -79,23 +93,18 @@ export default {
     weekdayNames() {
       return ['一', '二', '三', '四', '五', '六', '日']
     },
-    allTodos() {
-      return this.$store.getters.tasksForDate(this.selectedDate)
-        .filter(t => t.kind === 'day' || t.kind === 'ddl')
+    allTasks() { return this.$store.getters.tasks },
+    allItems() {
+      return calendarItemsForDate(this.allTasks, this.selectedDate)
     },
     detailHeader() {
       return moment(this.selectedDate, 'YYYY-MM-DD').format('M月D日 dddd')
     },
   },
   methods: {
-    todosFor(date) {
-      return this.$store.getters.tasksForDate(date)
-        .filter(t => t.kind === 'day' || t.kind === 'ddl')
-    },
-    previewTodos(date) { return this.todosFor(date).slice(0, PREVIEW_MAX) },
+    previewItems(date) { return previewCalendarItems(this.allTasks, date, PREVIEW_MAX).items },
     overflowCount(date) {
-      const total = this.todosFor(date).length
-      return total > PREVIEW_MAX ? total - PREVIEW_MAX : 0
+      return previewCalendarItems(this.allTasks, date, PREVIEW_MAX).overflowCount
     },
     selectDate(date) { this.$store.commit('setSelectedDate', date) },
     addTodo() {
