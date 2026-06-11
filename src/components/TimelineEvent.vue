@@ -5,7 +5,7 @@
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
   >
-    <span class="tl-event-title">{{ event.title }}</span>
+    <span class="tl-event-title">{{ event.text }}</span>
     <span class="tl-event-time">{{ event.startTime }}–{{ event.endTime }}</span>
     <button v-if="hovered" class="tl-event-delete" @click.stop="$emit('delete', event.id)">
       <i class="bi bi-x"></i>
