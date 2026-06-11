@@ -98,24 +98,31 @@ export default {
       this.showSchedule = !this.showSchedule
       if (this.showSchedule) this.showDdl = false
     },
-    submit() {
+    async submit() {
       const text = this.text.trim()
       if (!text) { this.error = '请填写内容'; return }
+      let payload
       if (this.showSchedule) {
         if (this.startTime >= this.endTime) { this.error = '结束时间需晚于开始'; return }
-        this.$store.dispatch('addTask', {
+        payload = {
           kind: 'event', date: this.date, text,
           startTime: this.startTime, endTime: this.endTime,
-        })
+        }
       } else if (this.showDdl) {
         const ddl = this.ddlDate
           ? (this.ddlTime ? `${this.ddlDate} ${this.ddlTime}` : this.ddlDate)
           : this.date
-        this.$store.dispatch('addTask', { kind: 'ddl', date: this.date, text, ddl })
+        payload = { kind: 'ddl', date: this.date, text, ddl }
       } else {
-        this.$store.dispatch('addTask', { kind: 'day', date: this.date, text })
+        payload = { kind: 'day', date: this.date, text }
       }
-      this.cancel()
+      try {
+        this.error = ''
+        await this.$store.dispatch('addTask', payload)
+        this.cancel()
+      } catch {
+        this.error = '保存失败，请重试'
+      }
     },
   },
 }

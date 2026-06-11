@@ -88,7 +88,7 @@ export default {
       const [h, m] = time.split(':').map(Number)
       return `${String(Math.min(h + 1, 23)).padStart(2, '0')}:${String(m).padStart(2, '0')}`
     },
-    confirm() {
+    async confirm() {
       const text = this.text.trim()
       if (!text) { this.error = '请填写内容'; return }
       let payload
@@ -106,12 +106,16 @@ export default {
       } else {
         payload = { text, kind: 'free', subtasks: [] }
       }
-      if (this.isEditing) {
-        this.$store.dispatch('updateTask', { id: this.task.id, changes: payload })
-      } else {
-        this.$store.dispatch('addTask', payload)
+      try {
+        if (this.isEditing) {
+          await this.$store.dispatch('updateTask', { id: this.task.id, changes: payload })
+        } else {
+          await this.$store.dispatch('addTask', payload)
+        }
+        this.$emit('close')
+      } catch {
+        this.error = '保存失败，请重试'
       }
-      this.$emit('close')
     },
   },
 }

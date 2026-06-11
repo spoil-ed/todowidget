@@ -97,28 +97,28 @@ const actions = {
     }
     commit('setTasks', tasks)
   },
-  addTask({ commit, state }, task) {
+  async addTask({ commit, state }, task) {
     const newTask = normalizeTaskFields({ ...task, id: uniqueId('task_'), checked: false })
     const tasks = [...state.tasks, newTask]
+    await tasksRepository.set(tasks)
     commit('setTasks', tasks)
-    tasksRepository.set(tasks)
   },
-  updateTask({ commit, state }, { id, changes }) {
+  async updateTask({ commit, state }, { id, changes }) {
     const tasks = state.tasks.map(t => (
       t.id === id ? normalizeTaskFields({ ...t, ...changes, id }) : t
     ))
+    await tasksRepository.set(tasks)
     commit('setTasks', tasks)
-    tasksRepository.set(tasks)
   },
-  toggleTask({ commit, state }, { id }) {
+  async toggleTask({ commit, state }, { id }) {
     const tasks = state.tasks.map(t => t.id === id ? { ...t, checked: !t.checked } : t)
+    await tasksRepository.set(tasks)
     commit('setTasks', tasks)
-    tasksRepository.set(tasks)
   },
-  deleteTask({ commit, state }, { id }) {
+  async deleteTask({ commit, state }, { id }) {
     const tasks = state.tasks.filter(t => t.id !== id)
+    await tasksRepository.set(tasks)
     commit('setTasks', tasks)
-    tasksRepository.set(tasks)
   },
 }
 

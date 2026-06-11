@@ -107,11 +107,16 @@ export default {
       return previewCalendarItems(this.allTasks, date, PREVIEW_MAX).overflowCount
     },
     selectDate(date) { this.$store.commit('setSelectedDate', date) },
-    addTodo() {
+    async addTodo() {
       const text = this.newText.trim()
       if (!text) return
-      this.$store.dispatch('addTask', { kind: 'day', date: this.selectedDate, text })
-      this.newText = ''
+      try {
+        await this.$store.dispatch('addTask', { kind: 'day', date: this.selectedDate, text })
+        this.newText = ''
+      } catch {
+        // Keep the user's text in place if persistence fails.
+        return
+      }
     },
     toggleTodo(id) { this.$store.dispatch('toggleTask', { id }) },
     deleteTodo(id) { this.$store.dispatch('deleteTask', { id }) },

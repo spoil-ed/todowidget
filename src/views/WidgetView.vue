@@ -145,6 +145,7 @@
             <input type="date" v-model="newTodoDdlDate" class="w-input" />
             <input type="time" v-model="newTodoDdlTime" :disabled="!newTodoDdlDate" class="w-input w-time" />
           </div>
+          <p v-if="todoError" class="w-error">{{ todoError }}</p>
         </div>
         <div v-for="t in todos" :key="t.id" :class="['w-todo-row', { done: t.checked }]">
           <input type="checkbox" :checked="t.checked" @change="toggleTodo(t.id)" class="w-checkbox" />
@@ -195,6 +196,7 @@ export default {
       newTodoText: '', newTodoDdlDate: '', newTodoDdlTime: '',
       newEventTitle: '', newEventStart: '09:00', newEventEnd: '10:00',
       eventError: '',
+      todoError: '',
     }
   },
   created() {
@@ -293,27 +295,36 @@ export default {
     toggleTodo(id) { this.$store.dispatch('toggleTask', { id }) },
     deleteTodo(id) { this.$store.dispatch('deleteTask', { id }) },
     deleteEvent(id) { this.$store.dispatch('deleteTask', { id }) },
-    submitTodo() {
+    async submitTodo() {
       const text = this.newTodoText.trim()
       if (!text) return
       const ddl = this.newTodoDdlDate
         ? (this.newTodoDdlTime ? `${this.newTodoDdlDate} ${this.newTodoDdlTime}` : this.newTodoDdlDate)
         : null
       const kind = ddl ? 'ddl' : 'day'
-      this.$store.dispatch('addTask', { kind, date: this.widgetDate, text, ...(ddl ? { ddl } : {}) })
-      this.newTodoText = ''; this.newTodoDdlDate = ''; this.newTodoDdlTime = ''
-      this.addingTodo = false
+      try {
+        this.todoError = ''
+        await this.$store.dispatch('addTask', { kind, date: this.widgetDate, text, ...(ddl ? { ddl } : {}) })
+        this.newTodoText = ''; this.newTodoDdlDate = ''; this.newTodoDdlTime = ''
+        this.addingTodo = false
+      } catch {
+        this.todoError = '保存失败，请重试'
+      }
     },
-    submitEvent() {
+    async submitEvent() {
       const title = this.newEventTitle.trim()
       if (!title) { this.eventError = '请填写内容'; return }
       if (this.newEventStart >= this.newEventEnd) { this.eventError = '结束需晚于开始'; return }
-      this.$store.dispatch('addTask', {
-        kind: 'event', date: this.widgetDate, text: title,
-        startTime: this.newEventStart, endTime: this.newEventEnd,
-      })
-      this.newEventTitle = ''; this.newEventStart = '09:00'; this.newEventEnd = '10:00'
-      this.eventError = ''; this.addingEvent = false
+      try {
+        await this.$store.dispatch('addTask', {
+          kind: 'event', date: this.widgetDate, text: title,
+          startTime: this.newEventStart, endTime: this.newEventEnd,
+        })
+        this.newEventTitle = ''; this.newEventStart = '09:00'; this.newEventEnd = '10:00'
+        this.eventError = ''; this.addingEvent = false
+      } catch {
+        this.eventError = '保存失败，请重试'
+      }
     },
     formatDdl(ddl) {
       return ddl.includes(' ')

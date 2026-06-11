@@ -86,11 +86,16 @@ export default {
     selectDate(date) {
       this.$store.commit('setSelectedDate', date)
     },
-    addTodo(date) {
+    async addTodo(date) {
       const text = (this.addTexts[date] || '').trim()
       if (!text) return
-      this.$store.dispatch('addTask', { kind: 'day', date, text })
-      this.addTexts[date] = ''
+      try {
+        await this.$store.dispatch('addTask', { kind: 'day', date, text })
+        this.addTexts[date] = ''
+      } catch {
+        // Keep the user's text in place if persistence fails.
+        return
+      }
     },
     toggleTodo(id) { this.$store.dispatch('toggleTask', { id }) },
     deleteTodo(id) { this.$store.dispatch('deleteTask', { id }) },

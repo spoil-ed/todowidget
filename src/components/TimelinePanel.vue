@@ -214,6 +214,7 @@ export default {
   position: absolute;
   left: 0;
   right: 0;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -235,6 +236,7 @@ export default {
   position: absolute;
   left: 0;
   right: 0;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   z-index: 4;
@@ -260,6 +262,7 @@ export default {
   position: absolute;
   left: 0;
   right: 0;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -269,8 +272,10 @@ export default {
 .tl-ddl-marker::before {
   content: '';
   position: absolute;
+  top: 50%;
   left: 44px;
   right: 0;
+  transform: translateY(-50%);
   height: 1px;
   border-top: 2px dashed var(--danger);
   opacity: 0.7;
