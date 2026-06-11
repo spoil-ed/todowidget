@@ -1,0 +1,99 @@
+import tasksRepository from '../../repositories/tasksRepository'
+import uniqueId from 'lodash.uniqueid'
+import moment from 'moment'
+
+function migrateTasks(oldTodos, oldEvents, oldBacklog) {
+  const tasks = []
+  if (oldTodos) {
+    for (const [date, items] of Object.entries(oldTodos)) {
+      for (const t of (items || [])) {
+        tasks.push({
+          id: t.id, text: t.text,
+          kind: t.ddl ? 'ddl' : 'day',
+          checked: !!t.checked, date,
+          ...(t.ddl ? { ddl: t.ddl } : {}),
+        })
+      }
+    }
+  }
+  if (oldEvents) {
+    for (const [date, items] of Object.entries(oldEvents)) {
+      for (const e of (items || [])) {
+        tasks.push({
+          id: e.id, text: e.title, kind: 'event',
+          checked: false, date,
+          startTime: e.startTime, endTime: e.endTime,
+        })
+      }
+    }
+  }
+  if (Array.isArray(oldBacklog)) {
+    for (const b of oldBacklog) {
+      tasks.push({
+        id: b.id, text: b.text, kind: 'free',
+        checked: b.status === 'done',
+        subtasks: b.subtasks || [],
+      })
+    }
+  }
+  return tasks
+}
+
+const state = { tasks: [] }
+
+const getters = {
+  tasks: s => s.tasks,
+  tasksForDate: s => date => s.tasks.filter(t => t.date === date),
+  overdueTasks: s => {
+    const now = moment()
+    return s.tasks.filter(t => {
+      if (t.kind !== 'ddl' || t.checked) return false
+      const d = t.ddl.includes(' ')
+        ? moment(t.ddl, 'YYYY-MM-DD HH:mm')
+        : moment(t.ddl, 'YYYY-MM-DD').endOf('day')
+      return d.isBefore(now)
+    })
+  },
+  freeTasks: s => s.tasks.filter(t => t.kind === 'free'),
+}
+
+const mutations = {
+  setTasks(state, tasks) { state.tasks = tasks },
+}
+
+const actions = {
+  async loadTasks({ commit }) {
+    const ipc = window.require('electron').ipcRenderer
+    const migrated = await ipc.invoke('config:get', 'tasks_migrated', false)
+    let tasks = await tasksRepository.getAll()
+    if (!migrated) {
+      const [oldTodos, oldEvents, oldBacklog] = await Promise.all([
+        ipc.invoke('todos:getAll'),
+        ipc.invoke('events:getAll'),
+        ipc.invoke('backlog:getAll'),
+      ])
+      tasks = migrateTasks(oldTodos, oldEvents, oldBacklog)
+      await tasksRepository.set(tasks)
+      await ipc.invoke('config:set', 'tasks_migrated', true)
+    }
+    commit('setTasks', tasks)
+  },
+  addTask({ commit, state }, task) {
+    const newTask = { id: uniqueId('task_'), checked: false, ...task }
+    const tasks = [...state.tasks, newTask]
+    commit('setTasks', tasks)
+    tasksRepository.set(tasks)
+  },
+  toggleTask({ commit, state }, { id }) {
+    const tasks = state.tasks.map(t => t.id === id ? { ...t, checked: !t.checked } : t)
+    commit('setTasks', tasks)
+    tasksRepository.set(tasks)
+  },
+  deleteTask({ commit, state }, { id }) {
+    const tasks = state.tasks.filter(t => t.id !== id)
+    commit('setTasks', tasks)
+    tasksRepository.set(tasks)
+  },
+}
+
+export default { namespaced: false, state, getters, mutations, actions }
